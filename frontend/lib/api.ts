@@ -62,10 +62,10 @@ function sleep(ms: number) {
 }
 
 function mergeSignals(
-  callerSignal?: AbortSignal,
+  callerSignal?: AbortSignal | null,
   timeoutSignal?: AbortSignal
 ): AbortSignal | undefined {
-  if (!callerSignal) return timeoutSignal;
+  if (callerSignal == null) return timeoutSignal;
   if (!timeoutSignal) return callerSignal;
   if (typeof AbortSignal !== "undefined" && typeof AbortSignal.any === "function") {
     return AbortSignal.any([callerSignal, timeoutSignal]);
