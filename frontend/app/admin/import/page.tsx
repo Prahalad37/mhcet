@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getAdminTests, importQuestionsCSV, getCSVTemplate } from "@/lib/adminApi";
@@ -10,8 +10,9 @@ import { ADMIN_TOPIC_OPTIONS } from "@/lib/adminTopicOptions";
 import type { AdminTest, ImportResult } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { PageLoadingState } from "@/components/ui/PageLoadingState";
 
-export default function AdminImportPage() {
+function AdminImportForm() {
   const searchParams = useSearchParams();
   const testIdFromQuery = searchParams.get("testId");
 
@@ -81,10 +82,12 @@ export default function AdminImportPage() {
     }
   }, [tests, testIdFromQuery]);
 
-  // Load tests on mount
+  useEffect(() => {
+    void loadTests();
+  }, []);
+
   if (tests === null) {
-    loadTests();
-    return <div className="p-4">Loading tests...</div>;
+    return <PageLoadingState label="Loading tests" />;
   }
 
   return (
@@ -226,5 +229,13 @@ export default function AdminImportPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminImportPage() {
+  return (
+    <Suspense fallback={<PageLoadingState label="Loading" />}>
+      <AdminImportForm />
+    </Suspense>
   );
 }
