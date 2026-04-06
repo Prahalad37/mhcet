@@ -33,9 +33,22 @@ function parseOrigins() {
     .filter(Boolean);
 }
 
+/** When `CORS_ALLOW_VERCEL_APP=true`, allow any `https://*.vercel.app` origin (previews + production alias). */
+function isHttpsVercelAppOrigin(origin) {
+  try {
+    const u = new URL(origin);
+    return u.protocol === "https:" && u.hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+}
+
 export function buildCorsOptions() {
   const envOrigins = parseOrigins();
   const isProd = process.env.NODE_ENV === "production";
+  const allowVercelApp =
+    process.env.CORS_ALLOW_VERCEL_APP === "true" ||
+    process.env.CORS_ALLOW_VERCEL_APP === "1";
 
   const allowedOrigins = isProd
     ? envOrigins
@@ -53,6 +66,9 @@ export function buildCorsOptions() {
       if (!origin) return callback(null, true);
       if (!isProd && allowedOrigins.length === 0) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (isProd && allowVercelApp && isHttpsVercelAppOrigin(origin)) {
+        return callback(null, true);
+      }
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,

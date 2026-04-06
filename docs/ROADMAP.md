@@ -9,6 +9,7 @@
 
 | Date (UTC) | Change |
 |------------|--------|
+| 2026-04-07 | **CORS (Railway + Vercel):** optional **`CORS_ALLOW_VERCEL_APP`** in `backend/src/app.js` allows `https://*.vercel.app` in production when set; README troubleshooting for “Unable to connect” login + `CORS_ORIGIN` requirement. |
 | 2026-04-07 | **API base URL normalization:** `getApiBaseUrl()` (`frontend/lib/apiBaseUrl.ts`) prepends `https://` when `NEXT_PUBLIC_API_URL` has no scheme so `fetch` hits Railway instead of resolving as a path on the Vercel app (login 404). |
 | 2026-04-06 | **Exam integrity + auth hardening (P0/P1):** added attempt result snapshots (`010_attempt_result_snapshots_and_practice_answers.sql`) and now `GET /api/attempts/:id/results` reads immutable snapshot rows; admin test delete always soft-deletes when submitted attempts exist; practice scoring now dedupes per `session_id + question_id`; login/register now honor safe `next` redirect; admin middleware re-checks role from DB (faster revocation); auth endpoints now have stricter limiter; explain quota flow reserves slot before generation and releases on failures; API abort signal fallback improved for runtimes without `AbortSignal.any`. |
 | 2026-04-05 | **CSV import:** `parseCSV` strips UTF-8 BOM, normalizes `\r\n`, maps Excel-style headers (`Question`, `Option A`, `Prompt`, `Answer`, etc.) to canonical `question` / `optionA` / …; clearer error when columns still mismatch. |
