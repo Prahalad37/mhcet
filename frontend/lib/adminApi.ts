@@ -1,4 +1,5 @@
 import { api, noErrorToast } from "./api";
+import { getApiBaseUrl } from "./apiBaseUrl";
 import { getToken } from "./auth";
 import { toastErrorSafe } from "./sonnerToast";
 import type {
@@ -11,8 +12,7 @@ import type {
   ImportResult,
 } from "./types";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:4000";
+const API_BASE = getApiBaseUrl();
 
 // ============================================================================
 // DASHBOARD & STATS

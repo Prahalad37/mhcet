@@ -1,8 +1,8 @@
 import { getToken } from "./auth";
+import { getApiBaseUrl } from "./apiBaseUrl";
 import { toastErrorSafe } from "./sonnerToast";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:4000";
+const baseUrl = getApiBaseUrl();
 
 /** Cold start / proxy blips (e.g. Railway): extra attempts before surfacing failure. */
 const MAX_ATTEMPTS = 3;
