@@ -121,27 +121,25 @@ Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` to match the API origin.
 | Backend  | `MOCK_EXPLAIN_MODEL`  | Optional; bumps cache key for mock explanations (e.g. `mock-v2`). |
 | Backend  | `LOCAL_LLM_URL`       | OpenAI-compatible base URL including `/v1`, e.g. `http://127.0.0.1:11434/v1` (used when `AI_PROVIDER=local`). |
 | Backend  | `LOCAL_LLM_MODEL`     | Model id for the local server (default `local-llm`). |
-| Backend  | `SKIP_DB_MIGRATE`     | Set to `true` when migrations run in a **separate** release/pre-deploy step (e.g. Railway). Omit or `false` for local dev and Docker Compose so the API image runs `npm run migrate` before `npm start`. |
+| Backend  | `SKIP_DB_MIGRATE`     | Set to `true` only if you run `npm run migrate` **outside** the container (e.g. CI). **Railway + Dockerfile:** leave **unset** or `false` so [`docker-entrypoint.sh`](backend/docker-entrypoint.sh) runs migrations **after** `DATABASE_URL` is injected (pre-deploy hooks often lack DB env). |
 | Frontend | `NEXT_PUBLIC_API_URL` | API base URL (e.g. `http://localhost:4000`). **Build-time:** inlined at `next build`; must match production API; redeploy after changes. |
 | Frontend | `NEXT_PUBLIC_SITE_URL` | Canonical site URL for Open Graph / metadata (no trailing slash), e.g. `https://your-app.vercel.app`. Defaults to `http://localhost:3000` if unset. |
 
 ## Production API (Railway): migrations vs start
 
-Do **not** rely on `npm run migrate && npm start` as the only start command when you run **multiple replicas** or want one migration per deploy: every process would try to migrate on boot.
+[`backend/Dockerfile`](backend/Dockerfile) uses [`docker-entrypoint.sh`](backend/docker-entrypoint.sh): unless **`SKIP_DB_MIGRATE=true`**, it runs **`npm run migrate`** then starts the server. That runs in the **same** environment as the running service, so **`DATABASE_URL` is always available** (unlike some hosts’ **pre-deploy** steps, which may not inject linked variables).
 
-**Recommended on Railway**
+**Railway (recommended)**
 
-1. Commit [`backend/railway.json`](backend/railway.json): **pre-deploy** runs `npm run migrate` once per deployment; **start** is `npm start` only.
-2. In the Railway service variables, set **`SKIP_DB_MIGRATE=true`** so the Docker entrypoint (if you build from `backend/Dockerfile`) does not run migrations again on every replica — pre-deploy already applied them.
-3. Migrations use a **PostgreSQL advisory lock** so overlapping runners (two deploys, or a manual `npm run migrate` during pre-deploy) serialize safely instead of racing.
+1. Do **not** set `SKIP_DB_MIGRATE` (or set it to `false`) so each deploy migrates on container start.
+2. Migrations use a **PostgreSQL advisory lock**, so multiple replicas or overlapping deploys **serialize** instead of racing.
+3. [`backend/railway.json`](backend/railway.json) only sets **`startCommand`** / **healthcheck** — no pre-deploy migrate (avoids `DATABASE_URL is required` when the pre-deploy phase has no DB env).
 
-If pre-deploy fails, the deployment should not promote bad containers; fix the migration and redeploy.
+If you **must** skip in-container migrate (e.g. external release job), set **`SKIP_DB_MIGRATE=true`** and run `npm run migrate` in that job with the same `DATABASE_URL`.
 
-**Local / Docker Compose** — leave `SKIP_DB_MIGRATE` unset; the API container still runs migrations once before the server (single-node stack).
+**Local / Docker Compose** — leave `SKIP_DB_MIGRATE` unset; same entrypoint behavior.
 
-**Option A (keep automated migrations)** — Keep pre-deploy / local migrate, but only add **additive, idempotent** SQL (new tables/columns with `IF NOT EXISTS` where appropriate); avoid destructive or ambiguous migrations in production.
-
-**Option B (manual, long-term)** — `npm start` only; run migrations yourself when needed, e.g. `railway run --service <api> npm run migrate` from `backend/` (same env as production). Still safe with advisory locking if two runs overlap briefly.
+**Option B (manual)** — `npm start` only with `SKIP_DB_MIGRATE=true`; run `railway run … npm run migrate` when needed. Advisory lock still protects overlaps.
 
 ## Production safeguards (backend)
 
@@ -163,10 +161,11 @@ Hobby or scaled-to-zero hosts can wake slowly; the first request may see **502 /
 | `JWT_SECRET` set | No secrets in `NEXT_PUBLIC_*` | Start mock → submit → results |
 | `CORS_ORIGIN` = Vercel URL(s) | Build succeeds | `/health` → `status: "ok"`, `database: "up"` |
 | `TRUST_PROXY=true` | | |
-| Pre-deploy migrate + `SKIP_DB_MIGRATE=true` if using Dockerfile | | |
+| `SKIP_DB_MIGRATE` unset (migrate in entrypoint) or external migrate + `SKIP_DB_MIGRATE=true` | | |
 
 ## Troubleshooting registration / login
 
+- **Railway: pre-deploy / migrate fails with `DATABASE_URL is required`** — Remove **`preDeployCommand`** migrate from the host (this repo’s `railway.json` has none) and **unset `SKIP_DB_MIGRATE`** so migrations run in **docker-entrypoint** where `DATABASE_URL` exists. Delete any **`SKIP_DB_MIGRATE=true`** you added for the old pre-deploy flow.
 - **Production: “Unable to connect” on login** — Almost always **CORS** (browser console shows `Access-Control-Allow-Origin`). **Redeploy the Railway API** (latest code allows `https://*.vercel.app` by default in production). If it still fails, set **`CORS_ORIGIN=https://mhcet-coral.vercel.app`** (exact) on Railway, or **`CORS_ALLOW_VERCEL_APP=false`** only if you intentionally use a strict allow-list. `curl` to `/health` can still be **200** while the browser is blocked.
 - **Backend must be running** on the port in `NEXT_PUBLIC_API_URL` (usually `4000`). Check `GET http://localhost:4000/health` returns **`status`: `"ok"`** and **`database`: `"up"`** (HTTP 200).
 - **`frontend/.env.local`** must set `NEXT_PUBLIC_API_URL` (restart `npm run dev` after changing it).

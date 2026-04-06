@@ -2,10 +2,6 @@ import { createApp } from "./app.js";
 import { isExplainKillSwitchActive } from "./services/ai/index.js";
 import { logWarn } from "./utils/logger.js";
 
-if (process.env.NODE_ENV === "production" && !process.env.SKIP_DB_MIGRATE) {
-  console.warn("⚠️ SKIP_DB_MIGRATE not set in production");
-}
-
 if (isExplainKillSwitchActive()) {
   logWarn({
     msg: "explain_kill_switch",
