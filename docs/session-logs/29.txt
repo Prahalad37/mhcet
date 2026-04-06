@@ -1,0 +1,38 @@
+---
+pid: 34930
+cwd: /Users/prahalad/Projects/MHCET
+active_command: cd frontend &&rm -rf .next && npm run dev
+last_command: |
+  curl -s http://127.0.0.1:4000/health
+last_exit_code: 0
+---
+prahalad@Prahalads-MacBook-Air MHCET % curl -s http://127.0.0.1:4000/health
+{"status":"ok","database":"up","uptime":6,"env":"development"}%                                             
+prahalad@Prahalads-MacBook-Air MHCET % cd frontend && rm -rf .next && npm run dev
+
+> frontend@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1465ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.2s (601 modules)
+ GET / 200 in 2480ms
+ ✓ Compiled in 194ms (279 modules)
+ ✓ Compiled /login in 248ms (583 modules)
+ GET /login 200 in 336ms
+ ✓ Compiled /tests in 421ms (600 modules)
+ ✓ Compiled /admin in 219ms (613 modules)
+ ✓ Compiled /admin/import in 151ms (623 modules)
+ GET /admin/import 200 in 112ms
+ ✓ Compiled /icon in 336ms (366 modules)
+ GET /icon?b12ebcedae96c59f 200 in 728ms
+ GET /tests 200 in 107ms
+ GET /icon?b12ebcedae96c59f 200 in 42ms
+ ✓ Compiled /admin in 209ms (370 modules)
+ GET /admin/import 200 in 150ms
+ GET /icon?b12ebcedae96c59f 200 in 67ms

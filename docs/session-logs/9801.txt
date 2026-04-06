@@ -1,0 +1,253 @@
+---
+pid: 97706
+cwd: "/Users/prahalad/Projects/MHCET/backend"
+command: "cd /Users/prahalad/Projects/MHCET/backend && npm run dev"
+started_at: 2026-04-05T13:12:09.993Z
+running_for_ms: 3081262  
+---
+
+> mhcet-api@1.0.0 dev
+> node --watch src/index.js
+
+{"level":"info","msg":"server_listen","ts":"2026-04-05T13:12:10.965Z","port":4000,"nodeEnv":"development"}
+{"level":"info","ts":"2026-04-05T13:12:16.169Z","msg":"http_request_start","requestId":"58f32c1b-4d0b-4301-acd7-33eaa9c6c9bc","method":"GET","path":"/health"}
+{"level":"info","ts":"2026-04-05T13:12:16.205Z","msg":"http_request","requestId":"58f32c1b-4d0b-4301-acd7-33eaa9c6c9bc","method":"GET","path":"/health","status":200,"durationMs":36}
+{"level":"info","ts":"2026-04-05T13:12:32.584Z","msg":"http_request_start","requestId":"95397c9a-d791-4aba-b394-044677aba600","method":"GET","path":"/"}
+{"level":"info","ts":"2026-04-05T13:12:32.586Z","msg":"http_request","requestId":"95397c9a-d791-4aba-b394-044677aba600","method":"GET","path":"/","status":200,"durationMs":2}
+{"level":"info","ts":"2026-04-05T13:15:09.239Z","msg":"http_request_start","requestId":"1648a516-f923-489c-a406-8de3cc1681a4","method":"OPTIONS","path":"/api/auth/login"}
+{"level":"info","ts":"2026-04-05T13:15:09.242Z","msg":"http_request","requestId":"1648a516-f923-489c-a406-8de3cc1681a4","method":"OPTIONS","path":"/api/auth/login","status":204,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:15:09.243Z","msg":"http_request_start","requestId":"a52d11a2-3358-47e9-afe6-7487f2d71a91","method":"POST","path":"/api/auth/login"}
+{"level":"info","ts":"2026-04-05T13:15:09.543Z","msg":"http_request","requestId":"a52d11a2-3358-47e9-afe6-7487f2d71a91","method":"POST","path":"/api/auth/login","status":200,"durationMs":300}
+{"level":"info","ts":"2026-04-05T13:15:09.817Z","msg":"http_request_start","requestId":"6503486c-f8e3-44e0-945e-895e3ff9df9f","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:09.817Z","msg":"http_request","requestId":"6503486c-f8e3-44e0-945e-895e3ff9df9f","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:15:09.819Z","msg":"http_request_start","requestId":"f049be1e-5b31-4a6b-bf28-947365932a17","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:09.822Z","msg":"http_request_start","requestId":"857000d3-10f5-470d-a230-649661e9e2c3","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:09.823Z","msg":"http_request","requestId":"857000d3-10f5-470d-a230-649661e9e2c3","method":"OPTIONS","path":"/api/config","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:09.825Z","msg":"http_request_start","requestId":"d3d1c74d-f976-4a08-bcfb-472e01f23f7e","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:09.834Z","msg":"http_request","requestId":"f049be1e-5b31-4a6b-bf28-947365932a17","method":"GET","path":"/api/tests","status":304,"durationMs":15}
+{"level":"info","ts":"2026-04-05T13:15:09.846Z","msg":"http_request","requestId":"d3d1c74d-f976-4a08-bcfb-472e01f23f7e","method":"GET","path":"/api/config","status":200,"durationMs":21}
+{"level":"info","ts":"2026-04-05T13:15:09.847Z","msg":"http_request_start","requestId":"9373f381-36da-48ad-8f05-5fbaeb74d4b3","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:09.848Z","msg":"http_request","requestId":"9373f381-36da-48ad-8f05-5fbaeb74d4b3","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:09.849Z","msg":"http_request_start","requestId":"72edf2d2-c841-4d4a-a885-4393819e520e","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:09.858Z","msg":"http_request","requestId":"72edf2d2-c841-4d4a-a885-4393819e520e","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":9}
+{"level":"info","ts":"2026-04-05T13:15:09.860Z","msg":"http_request_start","requestId":"1cc46518-03e8-4597-bd6d-de31856ca6e6","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:09.860Z","msg":"http_request","requestId":"1cc46518-03e8-4597-bd6d-de31856ca6e6","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:15:09.862Z","msg":"http_request_start","requestId":"621b9516-39a1-48f1-91c0-214f2d078b02","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:09.867Z","msg":"http_request","requestId":"621b9516-39a1-48f1-91c0-214f2d078b02","method":"GET","path":"/api/attempts","status":304,"durationMs":5}
+{"level":"info","ts":"2026-04-05T13:15:20.586Z","msg":"http_request_start","requestId":"be54ef4f-a672-4f6a-84f6-c72cdd98eb10","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:20.586Z","msg":"http_request","requestId":"be54ef4f-a672-4f6a-84f6-c72cdd98eb10","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:15:20.587Z","msg":"http_request_start","requestId":"c1ae8e2b-5adb-4de4-b51f-a4242fd90b44","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:20.587Z","msg":"http_request","requestId":"c1ae8e2b-5adb-4de4-b51f-a4242fd90b44","method":"OPTIONS","path":"/api/config","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:15:20.588Z","msg":"http_request_start","requestId":"6b4110a6-fda6-4b4f-aa2b-8ed00a823026","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:20.589Z","msg":"http_request_start","requestId":"4895f665-7dde-4910-bd06-236f1861c2b1","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:20.591Z","msg":"http_request","requestId":"6b4110a6-fda6-4b4f-aa2b-8ed00a823026","method":"GET","path":"/api/tests","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:15:20.592Z","msg":"http_request","requestId":"4895f665-7dde-4910-bd06-236f1861c2b1","method":"GET","path":"/api/config","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:15:20.597Z","msg":"http_request_start","requestId":"7f8d8ef7-567a-4bd6-bded-09604c296e57","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:20.597Z","msg":"http_request","requestId":"7f8d8ef7-567a-4bd6-bded-09604c296e57","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:15:20.599Z","msg":"http_request_start","requestId":"28f472e0-85f7-4f91-a445-f8420415b0c4","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:20.603Z","msg":"http_request","requestId":"28f472e0-85f7-4f91-a445-f8420415b0c4","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:15:20.605Z","msg":"http_request_start","requestId":"8e952ad4-1cc7-4a41-9a6c-cbf372a418b2","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:20.605Z","msg":"http_request","requestId":"8e952ad4-1cc7-4a41-9a6c-cbf372a418b2","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:15:20.606Z","msg":"http_request_start","requestId":"fb57b8fe-08a0-40b9-83da-ca65253170b3","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:20.609Z","msg":"http_request","requestId":"fb57b8fe-08a0-40b9-83da-ca65253170b3","method":"GET","path":"/api/attempts","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:15:27.650Z","msg":"http_request_start","requestId":"e858145f-4848-447b-9574-78945fdbe9f0","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:27.651Z","msg":"http_request","requestId":"e858145f-4848-447b-9574-78945fdbe9f0","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:27.652Z","msg":"http_request_start","requestId":"ed12eef0-7534-4985-b24b-ec13f0ac3c8e","method":"POST","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:27.679Z","msg":"http_request","requestId":"ed12eef0-7534-4985-b24b-ec13f0ac3c8e","method":"POST","path":"/api/attempts","status":201,"durationMs":27}
+{"level":"info","ts":"2026-04-05T13:15:30.667Z","msg":"http_request_start","requestId":"a8099f48-4b38-4df8-9681-0e3a92f47c87","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:30.668Z","msg":"http_request","requestId":"a8099f48-4b38-4df8-9681-0e3a92f47c87","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:30.668Z","msg":"http_request_start","requestId":"cb4e48dc-5c04-455c-80aa-01b838684dda","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:30.669Z","msg":"http_request","requestId":"cb4e48dc-5c04-455c-80aa-01b838684dda","method":"OPTIONS","path":"/api/config","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:30.669Z","msg":"http_request_start","requestId":"5dd18257-b58a-4a1b-a314-bd0ae954e277","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:30.673Z","msg":"http_request_start","requestId":"fd049437-351b-49d8-8d02-ca5aab63c1c3","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:30.675Z","msg":"http_request","requestId":"5dd18257-b58a-4a1b-a314-bd0ae954e277","method":"GET","path":"/api/tests","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:15:30.677Z","msg":"http_request","requestId":"fd049437-351b-49d8-8d02-ca5aab63c1c3","method":"GET","path":"/api/config","status":200,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:15:30.679Z","msg":"http_request_start","requestId":"8be65909-c1a2-4492-9a90-c6cb6c279ac7","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:30.679Z","msg":"http_request","requestId":"8be65909-c1a2-4492-9a90-c6cb6c279ac7","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:15:30.681Z","msg":"http_request_start","requestId":"1200c460-8f9f-4a2f-ada1-de51348ed060","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:30.687Z","msg":"http_request","requestId":"1200c460-8f9f-4a2f-ada1-de51348ed060","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:15:30.689Z","msg":"http_request_start","requestId":"b7d404e0-28a0-4831-9f7b-e4f4c33028ed","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:30.693Z","msg":"http_request","requestId":"b7d404e0-28a0-4831-9f7b-e4f4c33028ed","method":"GET","path":"/api/attempts","status":200,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:15:43.827Z","msg":"http_request_start","requestId":"de17d4fa-ad08-41a7-b531-3348d7e5f99b","method":"OPTIONS","path":"/api/attempts/b52e8247-cfd8-4020-8cf0-5600c99952bf/resume"}
+{"level":"info","ts":"2026-04-05T13:15:43.829Z","msg":"http_request","requestId":"de17d4fa-ad08-41a7-b531-3348d7e5f99b","method":"OPTIONS","path":"/api/attempts/b52e8247-cfd8-4020-8cf0-5600c99952bf/resume","status":204,"durationMs":2}
+{"level":"info","ts":"2026-04-05T13:15:43.830Z","msg":"http_request_start","requestId":"a0e1bc91-a68d-4375-b5c7-4d57a3767d8e","method":"GET","path":"/api/attempts/b52e8247-cfd8-4020-8cf0-5600c99952bf/resume"}
+{"level":"info","ts":"2026-04-05T13:15:43.849Z","msg":"http_request","requestId":"a0e1bc91-a68d-4375-b5c7-4d57a3767d8e","method":"GET","path":"/api/attempts/b52e8247-cfd8-4020-8cf0-5600c99952bf/resume","status":200,"durationMs":19}
+{"level":"info","ts":"2026-04-05T13:15:46.369Z","msg":"http_request_start","requestId":"395da5e0-ca03-4c23-a7f9-bb91fd9b5d4d","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:46.370Z","msg":"http_request","requestId":"395da5e0-ca03-4c23-a7f9-bb91fd9b5d4d","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:46.371Z","msg":"http_request_start","requestId":"1e22d1db-ec29-4ac7-a7e6-40276ca1e2f2","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:46.379Z","msg":"http_request","requestId":"1e22d1db-ec29-4ac7-a7e6-40276ca1e2f2","method":"OPTIONS","path":"/api/config","status":204,"durationMs":8}
+{"level":"info","ts":"2026-04-05T13:15:46.380Z","msg":"http_request_start","requestId":"29082216-5162-412d-9b30-240403b86839","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:15:46.382Z","msg":"http_request_start","requestId":"21da448b-e923-4f65-bcf0-44a515f4fc36","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:15:46.385Z","msg":"http_request","requestId":"29082216-5162-412d-9b30-240403b86839","method":"GET","path":"/api/tests","status":304,"durationMs":5}
+{"level":"info","ts":"2026-04-05T13:15:46.386Z","msg":"http_request","requestId":"21da448b-e923-4f65-bcf0-44a515f4fc36","method":"GET","path":"/api/config","status":304,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:15:46.387Z","msg":"http_request_start","requestId":"c76b67c7-b5f4-44b6-a7d4-d8df200ef5fa","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:46.388Z","msg":"http_request","requestId":"c76b67c7-b5f4-44b6-a7d4-d8df200ef5fa","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:46.389Z","msg":"http_request_start","requestId":"d82e4b8a-6c86-4f04-80e3-76a249dc57f4","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:15:46.395Z","msg":"http_request","requestId":"d82e4b8a-6c86-4f04-80e3-76a249dc57f4","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:15:46.398Z","msg":"http_request_start","requestId":"4b6b6874-2427-42f7-a288-47504d302e54","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:46.399Z","msg":"http_request","requestId":"4b6b6874-2427-42f7-a288-47504d302e54","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:15:46.401Z","msg":"http_request_start","requestId":"2dec68b4-cfd1-4506-a814-56adff8b1777","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:15:46.408Z","msg":"http_request","requestId":"2dec68b4-cfd1-4506-a814-56adff8b1777","method":"GET","path":"/api/attempts","status":304,"durationMs":7}
+{"level":"info","ts":"2026-04-05T13:19:40.563Z","msg":"http_request_start","requestId":"91f11425-85fb-4b46-9066-cd34afea86d7","method":"OPTIONS","path":"/api/auth/login"}
+{"level":"info","ts":"2026-04-05T13:19:40.565Z","msg":"http_request","requestId":"91f11425-85fb-4b46-9066-cd34afea86d7","method":"OPTIONS","path":"/api/auth/login","status":204,"durationMs":2}
+{"level":"info","ts":"2026-04-05T13:19:40.567Z","msg":"http_request_start","requestId":"f302cf05-9c2a-4fa4-9f7a-a4e6c742de50","method":"POST","path":"/api/auth/login"}
+{"level":"info","ts":"2026-04-05T13:19:40.850Z","msg":"http_request","requestId":"f302cf05-9c2a-4fa4-9f7a-a4e6c742de50","method":"POST","path":"/api/auth/login","status":200,"durationMs":283}
+{"level":"info","ts":"2026-04-05T13:19:40.911Z","msg":"http_request_start","requestId":"02dda1c1-0140-4c17-9b56-0ae1e921594e","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:19:40.912Z","msg":"http_request","requestId":"02dda1c1-0140-4c17-9b56-0ae1e921594e","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:19:40.912Z","msg":"http_request_start","requestId":"4a389add-5636-4dfc-968f-704fc462c703","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:19:40.913Z","msg":"http_request","requestId":"4a389add-5636-4dfc-968f-704fc462c703","method":"OPTIONS","path":"/api/config","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:19:40.913Z","msg":"http_request_start","requestId":"e6dd9b7e-3b19-44e8-affd-5ecc4dbee002","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:19:40.914Z","msg":"http_request_start","requestId":"8141acff-c6c8-4f78-b0dc-024addef60e0","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:19:40.927Z","msg":"http_request","requestId":"e6dd9b7e-3b19-44e8-affd-5ecc4dbee002","method":"GET","path":"/api/tests","status":200,"durationMs":14}
+{"level":"info","ts":"2026-04-05T13:19:40.934Z","msg":"http_request","requestId":"8141acff-c6c8-4f78-b0dc-024addef60e0","method":"GET","path":"/api/config","status":200,"durationMs":20}
+{"level":"info","ts":"2026-04-05T13:19:40.936Z","msg":"http_request_start","requestId":"ee6e1598-d71c-4e00-9c44-e696c7d73145","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:19:40.936Z","msg":"http_request","requestId":"ee6e1598-d71c-4e00-9c44-e696c7d73145","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:19:40.936Z","msg":"http_request_start","requestId":"b93b6598-1699-4f8f-92b0-1d92c5963b57","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:19:40.943Z","msg":"http_request","requestId":"b93b6598-1699-4f8f-92b0-1d92c5963b57","method":"GET","path":"/api/analytics/insights","status":200,"durationMs":7}
+{"level":"info","ts":"2026-04-05T13:19:40.945Z","msg":"http_request_start","requestId":"74dfb26f-6155-4e93-8f4f-afb3dc46f7bd","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:19:40.946Z","msg":"http_request","requestId":"74dfb26f-6155-4e93-8f4f-afb3dc46f7bd","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:19:40.948Z","msg":"http_request_start","requestId":"a6c69de5-1854-4a3b-a933-140fb8430a96","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:19:40.950Z","msg":"http_request","requestId":"a6c69de5-1854-4a3b-a933-140fb8430a96","method":"GET","path":"/api/attempts","status":200,"durationMs":2}
+{"level":"info","ts":"2026-04-05T13:21:45.674Z","msg":"http_request_start","requestId":"f3d6603f-c48a-405e-9b04-21a5cfda8c23","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:21:45.678Z","msg":"http_request","requestId":"f3d6603f-c48a-405e-9b04-21a5cfda8c23","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:21:45.679Z","msg":"http_request_start","requestId":"058e4366-8ebe-4ef8-8ef2-ff252098f6e6","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:21:45.679Z","msg":"http_request","requestId":"058e4366-8ebe-4ef8-8ef2-ff252098f6e6","method":"OPTIONS","path":"/api/config","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:21:45.681Z","msg":"http_request_start","requestId":"c6a44717-27c7-4221-af64-0ef48a8d8ce5","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:21:45.687Z","msg":"http_request_start","requestId":"23d904ba-8af4-4761-9382-8d71df4e1eac","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:21:45.711Z","msg":"http_request","requestId":"c6a44717-27c7-4221-af64-0ef48a8d8ce5","method":"GET","path":"/api/tests","status":200,"durationMs":30}
+{"level":"info","ts":"2026-04-05T13:21:45.711Z","msg":"http_request","requestId":"23d904ba-8af4-4761-9382-8d71df4e1eac","method":"GET","path":"/api/config","status":304,"durationMs":24}
+{"level":"info","ts":"2026-04-05T13:21:45.714Z","msg":"http_request_start","requestId":"82d5c75f-a9a5-41c8-bf91-90f4d86d14a0","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:21:45.714Z","msg":"http_request","requestId":"82d5c75f-a9a5-41c8-bf91-90f4d86d14a0","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:21:45.715Z","msg":"http_request_start","requestId":"fec49d41-4eb9-4309-a262-759d452c17ff","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:21:45.720Z","msg":"http_request","requestId":"fec49d41-4eb9-4309-a262-759d452c17ff","method":"GET","path":"/api/analytics/insights","status":200,"durationMs":5}
+{"level":"info","ts":"2026-04-05T13:21:45.721Z","msg":"http_request_start","requestId":"3cbc87a0-2a29-4e13-9bde-afa892921b37","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:21:45.722Z","msg":"http_request","requestId":"3cbc87a0-2a29-4e13-9bde-afa892921b37","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:21:45.723Z","msg":"http_request_start","requestId":"3f71c840-b313-4349-a46d-e1c58c9366d5","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:21:45.725Z","msg":"http_request","requestId":"3f71c840-b313-4349-a46d-e1c58c9366d5","method":"GET","path":"/api/attempts","status":304,"durationMs":2}
+{"level":"info","ts":"2026-04-05T13:21:50.390Z","msg":"http_request_start","requestId":"c1ae721e-7a48-4eaa-8301-a526d4d51a7c","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:21:50.395Z","msg":"http_request","requestId":"c1ae721e-7a48-4eaa-8301-a526d4d51a7c","method":"GET","path":"/api/attempts","status":304,"durationMs":5}
+{"level":"info","ts":"2026-04-05T13:21:53.555Z","msg":"http_request_start","requestId":"7f5f3435-ac10-4f72-950a-4e70c75a3279","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:21:53.556Z","msg":"http_request","requestId":"7f5f3435-ac10-4f72-950a-4e70c75a3279","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:21:53.557Z","msg":"http_request_start","requestId":"60fbe03c-fba3-4c7f-aed3-5e3f6dd53924","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:21:53.558Z","msg":"http_request","requestId":"60fbe03c-fba3-4c7f-aed3-5e3f6dd53924","method":"OPTIONS","path":"/api/config","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:21:53.559Z","msg":"http_request_start","requestId":"a3c21079-03b3-4a2e-967c-268f17452375","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:21:53.561Z","msg":"http_request_start","requestId":"a15f6cd9-5bbb-450d-8335-7af45e5e74b0","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:21:53.565Z","msg":"http_request","requestId":"a3c21079-03b3-4a2e-967c-268f17452375","method":"GET","path":"/api/tests","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:21:53.577Z","msg":"http_request","requestId":"a15f6cd9-5bbb-450d-8335-7af45e5e74b0","method":"GET","path":"/api/config","status":304,"durationMs":16}
+{"level":"info","ts":"2026-04-05T13:21:53.581Z","msg":"http_request_start","requestId":"1e09b1c2-43e8-4960-b8c9-b950729a8ec1","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:21:53.582Z","msg":"http_request","requestId":"1e09b1c2-43e8-4960-b8c9-b950729a8ec1","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:21:53.585Z","msg":"http_request_start","requestId":"578453fc-62ac-4d16-9b29-26b4c0d70e97","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:21:53.601Z","msg":"http_request","requestId":"578453fc-62ac-4d16-9b29-26b4c0d70e97","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":16}
+{"level":"info","ts":"2026-04-05T13:21:53.604Z","msg":"http_request_start","requestId":"922bceb2-634f-43b1-84d3-ea14a796c6ac","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:21:53.604Z","msg":"http_request","requestId":"922bceb2-634f-43b1-84d3-ea14a796c6ac","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:21:53.607Z","msg":"http_request_start","requestId":"339d57cf-1c2d-416e-86ce-749112ed16dc","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:21:53.613Z","msg":"http_request","requestId":"339d57cf-1c2d-416e-86ce-749112ed16dc","method":"GET","path":"/api/attempts","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:21:55.169Z","msg":"http_request_start","requestId":"05555eab-c995-4188-9344-62d8a712c006","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:21:55.173Z","msg":"http_request","requestId":"05555eab-c995-4188-9344-62d8a712c006","method":"GET","path":"/api/attempts","status":304,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:21:56.988Z","msg":"http_request_start","requestId":"e79a9a4c-151e-4e84-bc5e-396de785e421","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:21:56.990Z","msg":"http_request_start","requestId":"2b94a7c9-c487-49a8-8723-6d88ac4fdafc","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:21:56.992Z","msg":"http_request","requestId":"e79a9a4c-151e-4e84-bc5e-396de785e421","method":"GET","path":"/api/tests","status":304,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:21:56.995Z","msg":"http_request","requestId":"2b94a7c9-c487-49a8-8723-6d88ac4fdafc","method":"GET","path":"/api/config","status":304,"durationMs":5}
+{"level":"info","ts":"2026-04-05T13:21:56.998Z","msg":"http_request_start","requestId":"d5b60605-5185-4a4f-bced-d0e1ac413e8b","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:21:57.004Z","msg":"http_request","requestId":"d5b60605-5185-4a4f-bced-d0e1ac413e8b","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:21:57.007Z","msg":"http_request_start","requestId":"6b22b10b-a068-47b4-aa8f-1094fdaab591","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:21:57.010Z","msg":"http_request","requestId":"6b22b10b-a068-47b4-aa8f-1094fdaab591","method":"GET","path":"/api/attempts","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:22:01.381Z","msg":"http_request_start","requestId":"635c597f-4015-4d13-8fa8-ad3641caf178","method":"OPTIONS","path":"/api/practice/subjects"}
+{"level":"info","ts":"2026-04-05T13:22:01.381Z","msg":"http_request","requestId":"635c597f-4015-4d13-8fa8-ad3641caf178","method":"OPTIONS","path":"/api/practice/subjects","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:22:01.382Z","msg":"http_request_start","requestId":"f02a1bb9-f90c-4675-bfba-7206f7c154b1","method":"GET","path":"/api/practice/subjects"}
+{"level":"info","ts":"2026-04-05T13:22:01.386Z","msg":"http_request","requestId":"f02a1bb9-f90c-4675-bfba-7206f7c154b1","method":"GET","path":"/api/practice/subjects","status":200,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:22:04.186Z","msg":"http_request_start","requestId":"8e3a90a5-31d8-4838-90a3-7d9b590306c0","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:22:04.187Z","msg":"http_request","requestId":"8e3a90a5-31d8-4838-90a3-7d9b590306c0","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:22:04.189Z","msg":"http_request_start","requestId":"fde39ec5-77d0-44da-952f-7a1794b883fa","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:22:04.193Z","msg":"http_request","requestId":"fde39ec5-77d0-44da-952f-7a1794b883fa","method":"GET","path":"/api/attempts","status":304,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:22:05.641Z","msg":"http_request_start","requestId":"f1d4b421-0a73-44a2-897a-3d9c529ebdbd","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:22:05.643Z","msg":"http_request","requestId":"f1d4b421-0a73-44a2-897a-3d9c529ebdbd","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":2}
+{"level":"info","ts":"2026-04-05T13:22:05.644Z","msg":"http_request_start","requestId":"cec8e588-a16d-42d0-9b42-87258758db0d","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:22:05.645Z","msg":"http_request","requestId":"cec8e588-a16d-42d0-9b42-87258758db0d","method":"OPTIONS","path":"/api/config","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:22:05.645Z","msg":"http_request_start","requestId":"7f2a2be9-7727-4502-b180-9b3610bbfcde","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T13:22:05.653Z","msg":"http_request_start","requestId":"8cb52acc-5af3-4158-ae6e-dc63dd196f79","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T13:22:05.668Z","msg":"http_request","requestId":"8cb52acc-5af3-4158-ae6e-dc63dd196f79","method":"GET","path":"/api/config","status":304,"durationMs":15}
+{"level":"info","ts":"2026-04-05T13:22:05.670Z","msg":"http_request","requestId":"7f2a2be9-7727-4502-b180-9b3610bbfcde","method":"GET","path":"/api/tests","status":304,"durationMs":25}
+{"level":"info","ts":"2026-04-05T13:22:05.672Z","msg":"http_request_start","requestId":"0bbe37de-ce10-4c34-a2fd-835c381097c4","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:22:05.672Z","msg":"http_request","requestId":"0bbe37de-ce10-4c34-a2fd-835c381097c4","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:22:05.674Z","msg":"http_request_start","requestId":"1846ecd3-dcb0-4768-86dc-720774ca567b","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T13:22:05.680Z","msg":"http_request","requestId":"1846ecd3-dcb0-4768-86dc-720774ca567b","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:22:05.682Z","msg":"http_request_start","requestId":"cda3d09b-0851-4ec6-b465-434cc6fab857","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T13:22:05.685Z","msg":"http_request","requestId":"cda3d09b-0851-4ec6-b465-434cc6fab857","method":"GET","path":"/api/attempts","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:22:07.218Z","msg":"http_request_start","requestId":"c1360038-0e57-4a43-9e76-c9b71ede4315","method":"OPTIONS","path":"/api/practice/subjects"}
+{"level":"info","ts":"2026-04-05T13:22:07.219Z","msg":"http_request","requestId":"c1360038-0e57-4a43-9e76-c9b71ede4315","method":"OPTIONS","path":"/api/practice/subjects","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:22:07.221Z","msg":"http_request_start","requestId":"6ce04c74-3cb1-49ea-9dc0-0e02885bbe55","method":"GET","path":"/api/practice/subjects"}
+{"level":"info","ts":"2026-04-05T13:22:07.224Z","msg":"http_request","requestId":"6ce04c74-3cb1-49ea-9dc0-0e02885bbe55","method":"GET","path":"/api/practice/subjects","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:25:23.826Z","msg":"http_request_start","requestId":"9b4cdacc-47e0-413e-8dba-571e60ad629a","method":"OPTIONS","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T13:25:23.827Z","msg":"http_request","requestId":"9b4cdacc-47e0-413e-8dba-571e60ad629a","method":"OPTIONS","path":"/api/admin/stats","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:25:23.827Z","msg":"http_request_start","requestId":"68deeec2-e0c6-4e69-b992-827a6fc04551","method":"OPTIONS","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T13:25:23.827Z","msg":"http_request","requestId":"68deeec2-e0c6-4e69-b992-827a6fc04551","method":"OPTIONS","path":"/api/admin/stats","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:25:23.830Z","msg":"http_request_start","requestId":"311df951-31cf-4a35-89c0-7c169204a752","method":"GET","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T13:25:23.868Z","msg":"http_request","requestId":"311df951-31cf-4a35-89c0-7c169204a752","method":"GET","path":"/api/admin/stats","status":200,"durationMs":38}
+{"level":"info","ts":"2026-04-05T13:25:23.869Z","msg":"http_request_start","requestId":"2fed425a-1c02-48a7-bb22-778585684507","method":"GET","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T13:25:23.872Z","msg":"http_request","requestId":"2fed425a-1c02-48a7-bb22-778585684507","method":"GET","path":"/api/admin/stats","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:25:26.683Z","msg":"http_request_start","requestId":"b512196c-21ee-4ef3-beb3-202822908b55","method":"GET","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T13:25:26.689Z","msg":"http_request","requestId":"b512196c-21ee-4ef3-beb3-202822908b55","method":"GET","path":"/api/admin/stats","status":304,"durationMs":6}
+{"level":"info","ts":"2026-04-05T13:25:26.691Z","msg":"http_request_start","requestId":"f2d2587d-1ccf-42c2-ba5c-474ca4ed04a7","method":"GET","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T13:25:26.699Z","msg":"http_request","requestId":"f2d2587d-1ccf-42c2-ba5c-474ca4ed04a7","method":"GET","path":"/api/admin/stats","status":304,"durationMs":9}
+{"level":"info","ts":"2026-04-05T13:25:29.310Z","msg":"http_request_start","requestId":"31f0f852-b5a3-48cf-8b59-62bf60f4b4f9","method":"OPTIONS","path":"/api/admin/users"}
+{"level":"info","ts":"2026-04-05T13:25:29.320Z","msg":"http_request","requestId":"31f0f852-b5a3-48cf-8b59-62bf60f4b4f9","method":"OPTIONS","path":"/api/admin/users","status":204,"durationMs":10}
+{"level":"info","ts":"2026-04-05T13:25:29.322Z","msg":"http_request_start","requestId":"e17b8a77-9d6f-43af-a7ce-78e8d57a2a21","method":"GET","path":"/api/admin/users"}
+{"level":"info","ts":"2026-04-05T13:25:29.340Z","msg":"http_request_start","requestId":"820002a6-5c69-41b4-85f0-03f470e2cce9","method":"OPTIONS","path":"/api/admin/users"}
+{"level":"info","ts":"2026-04-05T13:25:29.340Z","msg":"http_request","requestId":"820002a6-5c69-41b4-85f0-03f470e2cce9","method":"OPTIONS","path":"/api/admin/users","status":204,"durationMs":7}
+{"level":"info","ts":"2026-04-05T13:25:29.355Z","msg":"http_request","requestId":"e17b8a77-9d6f-43af-a7ce-78e8d57a2a21","method":"GET","path":"/api/admin/users","status":200,"durationMs":33}
+{"level":"info","ts":"2026-04-05T13:25:29.357Z","msg":"http_request_start","requestId":"2e150b03-a341-4382-a7f6-d6d497154272","method":"GET","path":"/api/admin/users"}
+{"level":"info","ts":"2026-04-05T13:25:29.360Z","msg":"http_request","requestId":"2e150b03-a341-4382-a7f6-d6d497154272","method":"GET","path":"/api/admin/users","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:25:35.356Z","msg":"http_request_start","requestId":"173fa9ba-9d2e-4c54-9f8f-c03d26a1ab1b","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:25:35.357Z","msg":"http_request","requestId":"173fa9ba-9d2e-4c54-9f8f-c03d26a1ab1b","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:25:35.359Z","msg":"http_request_start","requestId":"0bf3d987-700c-43b9-bdac-7066e036cdf2","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:25:35.359Z","msg":"http_request","requestId":"0bf3d987-700c-43b9-bdac-7066e036cdf2","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T13:25:35.360Z","msg":"http_request_start","requestId":"f3b12480-764a-4829-89ba-aa7e216849d1","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:25:35.372Z","msg":"http_request","requestId":"f3b12480-764a-4829-89ba-aa7e216849d1","method":"GET","path":"/api/admin/tests","status":200,"durationMs":12}
+{"level":"info","ts":"2026-04-05T13:25:35.374Z","msg":"http_request_start","requestId":"7c00d966-d24f-473a-b1b3-fffb7e158143","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:25:35.378Z","msg":"http_request","requestId":"7c00d966-d24f-473a-b1b3-fffb7e158143","method":"GET","path":"/api/admin/tests","status":304,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:25:37.632Z","msg":"http_request_start","requestId":"fe555ba8-ad92-480f-8670-f4997b9d07f9","method":"OPTIONS","path":"/api/admin/import/template"}
+{"level":"info","ts":"2026-04-05T13:25:37.633Z","msg":"http_request","requestId":"fe555ba8-ad92-480f-8670-f4997b9d07f9","method":"OPTIONS","path":"/api/admin/import/template","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:25:37.635Z","msg":"http_request_start","requestId":"7400b081-e6a8-4a4c-b10f-7f77d143b2f5","method":"GET","path":"/api/admin/import/template"}
+{"level":"info","ts":"2026-04-05T13:25:37.639Z","msg":"http_request","requestId":"7400b081-e6a8-4a4c-b10f-7f77d143b2f5","method":"GET","path":"/api/admin/import/template","status":304,"durationMs":4}
+{"level":"info","ts":"2026-04-05T13:37:19.454Z","msg":"http_request_start","requestId":"92082aae-f108-453e-89a5-5eb408208044","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:37:19.455Z","msg":"http_request","requestId":"92082aae-f108-453e-89a5-5eb408208044","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:37:19.455Z","msg":"http_request_start","requestId":"bdf180f3-f018-45b3-b50b-9b5c6e45b719","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:37:19.456Z","msg":"http_request","requestId":"bdf180f3-f018-45b3-b50b-9b5c6e45b719","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T13:37:19.457Z","msg":"http_request_start","requestId":"4ec054cc-7a4d-4876-bfc8-1d7e5dcf3749","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:37:19.535Z","msg":"http_request","requestId":"4ec054cc-7a4d-4876-bfc8-1d7e5dcf3749","method":"GET","path":"/api/admin/tests","status":304,"durationMs":78}
+{"level":"info","ts":"2026-04-05T13:37:19.538Z","msg":"http_request_start","requestId":"e61f0621-c73f-436f-b719-ae8c1383ce46","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:37:19.541Z","msg":"http_request","requestId":"e61f0621-c73f-436f-b719-ae8c1383ce46","method":"GET","path":"/api/admin/tests","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T13:42:28.989Z","msg":"http_request_start","requestId":"f5e7f353-8195-4e53-adf9-6701ef957134","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:42:28.991Z","msg":"http_request","requestId":"f5e7f353-8195-4e53-adf9-6701ef957134","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":2}
+{"level":"info","ts":"2026-04-05T13:42:28.992Z","msg":"http_request_start","requestId":"05e7149a-564c-49d6-a1ed-adb73569bb28","method":"POST","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T13:42:29.039Z","msg":"http_request","requestId":"05e7149a-564c-49d6-a1ed-adb73569bb28","method":"POST","path":"/api/admin/tests","status":201,"durationMs":47}
+Failed to write audit log: error: insert or update on table "audit_logs" violates foreign key constraint "audit_logs_user_id_fkey"
+    at /Users/prahalad/Projects/MHCET/backend/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async logAuditEntry (file:///Users/prahalad/Projects/MHCET/backend/src/middleware/auditLogger.js:87:5)
+    at async Immediate.<anonymous> (file:///Users/prahalad/Projects/MHCET/backend/src/middleware/auditLogger.js:16:11) {
+  length: 297,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (user_id)=(56335fc9-5ca8-4862-a798-af6101794acb) is not present in table "users".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'audit_logs',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'audit_logs_user_id_fkey',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+
+---
+exit_code: unknown
+elapsed_ms: 3085497
+ended_at: 2026-04-05T14:03:35.490Z
+---

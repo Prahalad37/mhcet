@@ -1,0 +1,25 @@
+---
+pid: 32231
+cwd: "/Users/prahalad/Projects/MHCET/frontend"
+command: "cd /Users/prahalad/Projects/MHCET/backend && npm install 2>&1"
+started_at: 2026-04-05T01:58:48.625Z
+running_for_ms: 103280   
+---
+
+added 68 packages, changed 2 packages, and audited 253 packages in 35s
+
+43 packages are looking for funding
+  run `npm fund` for details
+
+3 high severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+---
+exit_code: 0
+elapsed_ms: 103809
+ended_at: 2026-04-05T02:00:32.434Z
+---

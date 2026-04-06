@@ -1,0 +1,63 @@
+# Default: `docker compose up -d` starts Postgres only (same as before).
+# Full stack (API + Next.js + Postgres): `docker compose --profile stack up -d`
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mhcet
+    ports:
+      - "5432:5432"
+    volumes:
+      - mhcet_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mhcet"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    profiles: ["stack"]
+    image: mhcet-api:local
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/mhcet
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-use-long-random-string}
+      NODE_ENV: ${API_NODE_ENV:-development}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://127.0.0.1:3000}
+      PORT: "4000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    profiles: ["stack"]
+    image: mhcet-web:local
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  mhcet_pg:

@@ -1,0 +1,10 @@
+---
+pid: 33848
+cwd: /Users/prahalad/Projects/MHCET
+last_command: cd /Users/prahalad/Projects/MHCET && docker compose up -d
+last_exit_code: 0
+---
+prahalad@Prahalads-MacBook-Air MHCET % cd /Users/prahalad/Projects/MHCET && docker compose up -d
+[+] up 1/1
+ ✔ Container mhcet-db-1 Running                       
+prahalad@Prahalads-MacBook-Air MHCET %

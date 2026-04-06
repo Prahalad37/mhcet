@@ -1,0 +1,375 @@
+---
+pid: 34365
+cwd: /Users/prahalad/Projects/MHCET/backend
+active_command: cd /Users/prahalad/Projects/MHCET/backendnpm run dev
+---
+Restarting 'src/index.js'
+{"level":"info","msg":"server_listen","ts":"2026-04-05T14:10:54.855Z","port":4000,"nodeEnv":"development"}
+{"level":"info","ts":"2026-04-05T14:11:21.268Z","msg":"http_request_start","requestId":"45f69603-971b-4bda-8b96-20295f15228e","method":"OPTIONS","path":"/api/admin/import/questions/87fa0de3-b4d6-4107-8b24-9ef7bf03d280"}
+{"level":"info","ts":"2026-04-05T14:11:21.272Z","msg":"http_request","requestId":"45f69603-971b-4bda-8b96-20295f15228e","method":"OPTIONS","path":"/api/admin/import/questions/87fa0de3-b4d6-4107-8b24-9ef7bf03d280","status":204,"durationMs":4}
+{"level":"info","ts":"2026-04-05T14:11:21.274Z","msg":"http_request_start","requestId":"2a2a5150-dd68-4019-85fc-9db9dfe6488b","method":"POST","path":"/api/admin/import/questions/87fa0de3-b4d6-4107-8b24-9ef7bf03d280"}
+{"level":"info","ts":"2026-04-05T14:11:21.299Z","msg":"http_request","requestId":"2a2a5150-dd68-4019-85fc-9db9dfe6488b","method":"POST","path":"/api/admin/import/questions/87fa0de3-b4d6-4107-8b24-9ef7bf03d280","status":400,"durationMs":25}
+{"level":"info","ts":"2026-04-05T14:11:22.320Z","msg":"http_request_start","requestId":"611a96b4-6319-46ff-affa-e46fb347e4f4","method":"POST","path":"/api/admin/import/questions/87fa0de3-b4d6-4107-8b24-9ef7bf03d280"}
+{"level":"info","ts":"2026-04-05T14:11:22.325Z","msg":"http_request","requestId":"611a96b4-6319-46ff-affa-e46fb347e4f4","method":"POST","path":"/api/admin/import/questions/87fa0de3-b4d6-4107-8b24-9ef7bf03d280","status":400,"durationMs":5}
+{"level":"info","ts":"2026-04-05T14:11:25.045Z","msg":"http_request_start","requestId":"0ada8f06-d639-4d77-827b-18494499b219","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:11:25.046Z","msg":"http_request","requestId":"0ada8f06-d639-4d77-827b-18494499b219","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:11:25.047Z","msg":"http_request_start","requestId":"30cda62f-e580-48fb-9e2e-d8471cb20703","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:11:25.049Z","msg":"http_request","requestId":"30cda62f-e580-48fb-9e2e-d8471cb20703","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":2}
+{"level":"info","ts":"2026-04-05T14:11:25.050Z","msg":"http_request_start","requestId":"233ca8ba-e2d8-46e6-8e19-ec658dad9689","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:11:25.068Z","msg":"http_request","requestId":"233ca8ba-e2d8-46e6-8e19-ec658dad9689","method":"GET","path":"/api/admin/tests","status":304,"durationMs":18}
+{"level":"info","ts":"2026-04-05T14:11:25.070Z","msg":"http_request_start","requestId":"da0499e8-886e-4a81-a20f-4c76a0e828de","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:11:25.073Z","msg":"http_request","requestId":"da0499e8-886e-4a81-a20f-4c76a0e828de","method":"GET","path":"/api/admin/tests","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T14:11:49.240Z","msg":"http_request_start","requestId":"b6c9245d-7203-4499-8566-0b7cc472d015","method":"OPTIONS","path":"/api/admin/import/template"}
+{"level":"info","ts":"2026-04-05T14:11:49.242Z","msg":"http_request","requestId":"b6c9245d-7203-4499-8566-0b7cc472d015","method":"OPTIONS","path":"/api/admin/import/template","status":204,"durationMs":2}
+{"level":"info","ts":"2026-04-05T14:11:49.247Z","msg":"http_request_start","requestId":"b10356db-e172-4380-90b1-c9c50bcf509a","method":"GET","path":"/api/admin/import/template"}
+{"level":"info","ts":"2026-04-05T14:11:49.252Z","msg":"http_request","requestId":"b10356db-e172-4380-90b1-c9c50bcf509a","method":"GET","path":"/api/admin/import/template","status":304,"durationMs":5}
+{"level":"info","ts":"2026-04-05T14:16:31.231Z","msg":"http_request_start","requestId":"1ba8a0e1-df6e-4c1f-aa20-63526c361d88","method":"OPTIONS","path":"/api/auth/login"}
+{"level":"info","ts":"2026-04-05T14:16:31.246Z","msg":"http_request","requestId":"1ba8a0e1-df6e-4c1f-aa20-63526c361d88","method":"OPTIONS","path":"/api/auth/login","status":204,"durationMs":16}
+{"level":"info","ts":"2026-04-05T14:16:31.247Z","msg":"http_request_start","requestId":"dad9ce6a-20a8-4eae-bcc1-7b2008ddeb29","method":"POST","path":"/api/auth/login"}
+{"level":"info","ts":"2026-04-05T14:16:31.565Z","msg":"http_request","requestId":"dad9ce6a-20a8-4eae-bcc1-7b2008ddeb29","method":"POST","path":"/api/auth/login","status":200,"durationMs":318}
+{"level":"info","ts":"2026-04-05T14:16:31.735Z","msg":"http_request_start","requestId":"27c076af-9eaa-429a-8a81-b79b7a722897","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T14:16:31.736Z","msg":"http_request","requestId":"27c076af-9eaa-429a-8a81-b79b7a722897","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:16:31.737Z","msg":"http_request_start","requestId":"be83957b-9339-44f0-85b5-0abb4fbfa4b4","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T14:16:31.738Z","msg":"http_request","requestId":"be83957b-9339-44f0-85b5-0abb4fbfa4b4","method":"OPTIONS","path":"/api/config","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:16:31.746Z","msg":"http_request_start","requestId":"f73c70b9-adee-4613-8bbc-4466208690f6","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T14:16:31.752Z","msg":"http_request_start","requestId":"a0b184b9-7676-4c58-a3e0-d43e4ebe126c","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T14:16:31.767Z","msg":"http_request","requestId":"f73c70b9-adee-4613-8bbc-4466208690f6","method":"GET","path":"/api/tests","status":200,"durationMs":20}
+{"level":"info","ts":"2026-04-05T14:16:31.810Z","msg":"http_request","requestId":"a0b184b9-7676-4c58-a3e0-d43e4ebe126c","method":"GET","path":"/api/config","status":200,"durationMs":58}
+{"level":"info","ts":"2026-04-05T14:16:31.812Z","msg":"http_request_start","requestId":"75428072-3902-4b48-bcd1-d393f8bfbea3","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T14:16:31.812Z","msg":"http_request","requestId":"75428072-3902-4b48-bcd1-d393f8bfbea3","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T14:16:31.814Z","msg":"http_request_start","requestId":"723db1c7-e1d8-4264-8f59-43fd5d991401","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T14:16:31.826Z","msg":"http_request","requestId":"723db1c7-e1d8-4264-8f59-43fd5d991401","method":"GET","path":"/api/analytics/insights","status":200,"durationMs":12}
+{"level":"info","ts":"2026-04-05T14:16:31.828Z","msg":"http_request_start","requestId":"d5a8c0e3-938f-482c-af46-c865f27a34af","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T14:16:31.829Z","msg":"http_request","requestId":"d5a8c0e3-938f-482c-af46-c865f27a34af","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:16:31.830Z","msg":"http_request_start","requestId":"499059ac-0489-47fd-95be-b3047c036038","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T14:16:31.834Z","msg":"http_request","requestId":"499059ac-0489-47fd-95be-b3047c036038","method":"GET","path":"/api/attempts","status":200,"durationMs":4}
+{"level":"info","ts":"2026-04-05T14:17:26.845Z","msg":"http_request_start","requestId":"5d7a5019-3958-4c99-afb3-39fe7a3ec7cd","method":"OPTIONS","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T14:17:26.846Z","msg":"http_request","requestId":"5d7a5019-3958-4c99-afb3-39fe7a3ec7cd","method":"OPTIONS","path":"/api/tests","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:17:26.846Z","msg":"http_request_start","requestId":"69812719-401b-4f61-8ce5-b407e4e8868d","method":"OPTIONS","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T14:17:26.847Z","msg":"http_request","requestId":"69812719-401b-4f61-8ce5-b407e4e8868d","method":"OPTIONS","path":"/api/config","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:17:26.849Z","msg":"http_request_start","requestId":"19da8619-32b7-4ded-8bff-bb6af929258c","method":"GET","path":"/api/tests"}
+{"level":"info","ts":"2026-04-05T14:17:26.857Z","msg":"http_request_start","requestId":"9c44e2f2-3f0a-45dd-8685-596a7d3dbb67","method":"GET","path":"/api/config"}
+{"level":"info","ts":"2026-04-05T14:17:26.900Z","msg":"http_request","requestId":"9c44e2f2-3f0a-45dd-8685-596a7d3dbb67","method":"GET","path":"/api/config","status":304,"durationMs":43}
+{"level":"info","ts":"2026-04-05T14:17:26.901Z","msg":"http_request","requestId":"19da8619-32b7-4ded-8bff-bb6af929258c","method":"GET","path":"/api/tests","status":304,"durationMs":52}
+{"level":"info","ts":"2026-04-05T14:17:26.902Z","msg":"http_request_start","requestId":"5a5ffe82-74fc-405c-a785-3c14149ccd96","method":"OPTIONS","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T14:17:26.903Z","msg":"http_request","requestId":"5a5ffe82-74fc-405c-a785-3c14149ccd96","method":"OPTIONS","path":"/api/analytics/insights","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:17:26.904Z","msg":"http_request_start","requestId":"cc6878d4-06f5-4d6a-a4ab-001b91571e89","method":"GET","path":"/api/analytics/insights"}
+{"level":"info","ts":"2026-04-05T14:17:26.912Z","msg":"http_request","requestId":"cc6878d4-06f5-4d6a-a4ab-001b91571e89","method":"GET","path":"/api/analytics/insights","status":304,"durationMs":8}
+{"level":"info","ts":"2026-04-05T14:17:26.914Z","msg":"http_request_start","requestId":"c666fd9d-a752-4414-8266-0af367015c48","method":"OPTIONS","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T14:17:26.914Z","msg":"http_request","requestId":"c666fd9d-a752-4414-8266-0af367015c48","method":"OPTIONS","path":"/api/attempts","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T14:17:26.915Z","msg":"http_request_start","requestId":"4264ea5f-d9fb-4b4f-b93c-eec0fc622554","method":"GET","path":"/api/attempts"}
+{"level":"info","ts":"2026-04-05T14:17:26.918Z","msg":"http_request","requestId":"4264ea5f-d9fb-4b4f-b93c-eec0fc622554","method":"GET","path":"/api/attempts","status":304,"durationMs":3}
+{"level":"info","ts":"2026-04-05T14:17:57.604Z","msg":"http_request_start","requestId":"f9f777af-c3d2-40aa-b387-f6ef50eb1371","method":"OPTIONS","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T14:17:57.605Z","msg":"http_request","requestId":"f9f777af-c3d2-40aa-b387-f6ef50eb1371","method":"OPTIONS","path":"/api/admin/stats","status":204,"durationMs":1}
+{"level":"info","ts":"2026-04-05T14:17:57.606Z","msg":"http_request_start","requestId":"6e41138d-cb89-4fd7-a4d3-c0ffeacd4484","method":"OPTIONS","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T14:17:57.606Z","msg":"http_request","requestId":"6e41138d-cb89-4fd7-a4d3-c0ffeacd4484","method":"OPTIONS","path":"/api/admin/stats","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T14:17:57.607Z","msg":"http_request_start","requestId":"f1dd9438-2e26-483a-929d-33217e533a73","method":"GET","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T14:17:57.646Z","msg":"http_request","requestId":"f1dd9438-2e26-483a-929d-33217e533a73","method":"GET","path":"/api/admin/stats","status":200,"durationMs":39}
+{"level":"info","ts":"2026-04-05T14:17:57.646Z","msg":"http_request_start","requestId":"0fd01d89-4a13-4de5-ba5b-e527afe76923","method":"GET","path":"/api/admin/stats"}
+{"level":"info","ts":"2026-04-05T14:17:57.648Z","msg":"http_request","requestId":"0fd01d89-4a13-4de5-ba5b-e527afe76923","method":"GET","path":"/api/admin/stats","status":304,"durationMs":2}
+{"level":"info","ts":"2026-04-05T14:18:04.979Z","msg":"http_request_start","requestId":"6755e8c4-aa79-4f5e-9110-d2f1cc2a1210","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:18:04.979Z","msg":"http_request","requestId":"6755e8c4-aa79-4f5e-9110-d2f1cc2a1210","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T14:18:04.980Z","msg":"http_request_start","requestId":"9a1ba7a5-f04c-465e-b9e8-f0a4b9955482","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:18:04.980Z","msg":"http_request","requestId":"9a1ba7a5-f04c-465e-b9e8-f0a4b9955482","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-05T14:18:04.982Z","msg":"http_request_start","requestId":"7312f44e-0861-42bc-90b7-dcc1976c1910","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:18:05.003Z","msg":"http_request","requestId":"7312f44e-0861-42bc-90b7-dcc1976c1910","method":"GET","path":"/api/admin/tests","status":304,"durationMs":21}
+{"level":"info","ts":"2026-04-05T14:18:05.005Z","msg":"http_request_start","requestId":"69fcc6be-e470-43de-a141-bf611c220d53","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-05T14:18:05.010Z","msg":"http_request","requestId":"69fcc6be-e470-43de-a141-bf611c220d53","method":"GET","path":"/api/admin/tests","status":304,"durationMs":5}
+{"level":"info","ts":"2026-04-06T15:27:45.790Z","msg":"http_request_start","requestId":"c438f7c8-6926-4cbb-b791-8b542c349753","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-06T15:27:45.794Z","msg":"http_request","requestId":"c438f7c8-6926-4cbb-b791-8b542c349753","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":4}
+{"level":"info","ts":"2026-04-06T15:27:45.796Z","msg":"http_request_start","requestId":"c3ee6f88-4d10-4406-ad7b-645086e4d354","method":"OPTIONS","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-06T15:27:45.796Z","msg":"http_request","requestId":"c3ee6f88-4d10-4406-ad7b-645086e4d354","method":"OPTIONS","path":"/api/admin/tests","status":204,"durationMs":0}
+{"level":"info","ts":"2026-04-06T15:27:45.797Z","msg":"http_request_start","requestId":"9a4cae15-c863-4fae-adc6-87cb045a58e3","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-06T15:27:45.877Z","msg":"http_request","requestId":"9a4cae15-c863-4fae-adc6-87cb045a58e3","method":"GET","path":"/api/admin/tests","status":304,"durationMs":80}
+{"level":"info","ts":"2026-04-06T15:27:45.880Z","msg":"http_request_start","requestId":"70b47575-a51b-4af9-9c38-d9a44b36326b","method":"GET","path":"/api/admin/tests"}
+{"level":"info","ts":"2026-04-06T15:27:45.885Z","msg":"http_request","requestId":"70b47575-a51b-4af9-9c38-d9a44b36326b","method":"GET","path":"/api/admin/tests","status":304,"durationMs":6}
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+error: terminating connection due to administrator command
+    at parseErrorMessage (/Users/prahalad/Projects/MHCET/backend/node_modules/pg-protocol/dist/parser.js:305:11)
+    at Parser.handlePacket (/Users/prahalad/Projects/MHCET/backend/node_modules/pg-protocol/dist/parser.js:143:27)
+    at Parser.parse (/Users/prahalad/Projects/MHCET/backend/node_modules/pg-protocol/dist/parser.js:37:38)
+    at Socket.<anonymous> (/Users/prahalad/Projects/MHCET/backend/node_modules/pg-protocol/dist/index.js:11:42)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:191:23)
+Emitted 'error' event on BoundPool instance at:
+    at Client.idleListener (/Users/prahalad/Projects/MHCET/backend/node_modules/pg-pool/index.js:62:10)
+    at Client.emit (node:events:524:28)
+    at Client._handleErrorEvent (/Users/prahalad/Projects/MHCET/backend/node_modules/pg/lib/client.js:393:10)
+    at Client._handleErrorMessage (/Users/prahalad/Projects/MHCET/backend/node_modules/pg/lib/client.js:404:12)
+    at Connection.emit (node:events:524:28)
+    at /Users/prahalad/Projects/MHCET/backend/node_modules/pg/lib/connection.js:115:12
+    at Parser.parse (/Users/prahalad/Projects/MHCET/backend/node_modules/pg-protocol/dist/parser.js:38:17)
+    at Socket.<anonymous> (/Users/prahalad/Projects/MHCET/backend/node_modules/pg-protocol/dist/index.js:11:42)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3286',
+  routine: 'ProcessInterrupts',
+  client: Client {
+    _events: [Object: null prototype] { error: [Function (anonymous)] },
+    _eventsCount: 1,
+    _maxListeners: undefined,
+    connectionParameters: ConnectionParameters {
+      user: 'postgres',
+      database: 'mhcet',
+      port: 5432,
+      host: 'localhost',
+      binary: false,
+      options: undefined,
+      ssl: false,
+      client_encoding: '',
+      replication: undefined,
+      isDomainSocket: false,
+      application_name: undefined,
+      fallback_application_name: undefined,
+      statement_timeout: false,
+      lock_timeout: false,
+      idle_in_transaction_session_timeout: false,
+      query_timeout: false,
+      connect_timeout: 2
+    },
+    user: 'postgres',
+    database: 'mhcet',
+    port: 5432,
+    host: 'localhost',
+    replication: undefined,
+    _Promise: [Function: Promise],
+    _types: TypeOverrides {
+      _types: {
+        getTypeParser: [Function: getTypeParser],
+        setTypeParser: [Function: setTypeParser],
+        arrayParser: { create: [Function: create] },
+        builtins: {
+          BOOL: 16,
+          BYTEA: 17,
+          CHAR: 18,
+          INT8: 20,
+          INT2: 21,
+          INT4: 23,
+          REGPROC: 24,
+          TEXT: 25,
+          OID: 26,
+          TID: 27,
+          XID: 28,
+          CID: 29,
+          JSON: 114,
+          XML: 142,
+          PG_NODE_TREE: 194,
+          SMGR: 210,
+          PATH: 602,
+          POLYGON: 604,
+          CIDR: 650,
+          FLOAT4: 700,
+          FLOAT8: 701,
+          ABSTIME: 702,
+          RELTIME: 703,
+          TINTERVAL: 704,
+          CIRCLE: 718,
+          MACADDR8: 774,
+          MONEY: 790,
+          MACADDR: 829,
+          INET: 869,
+          ACLITEM: 1033,
+          BPCHAR: 1042,
+          VARCHAR: 1043,
+          DATE: 1082,
+          TIME: 1083,
+          TIMESTAMP: 1114,
+          TIMESTAMPTZ: 1184,
+          INTERVAL: 1186,
+          TIMETZ: 1266,
+          BIT: 1560,
+          VARBIT: 1562,
+          NUMERIC: 1700,
+          REFCURSOR: 1790,
+          REGPROCEDURE: 2202,
+          REGOPER: 2203,
+          REGOPERATOR: 2204,
+          REGCLASS: 2205,
+          REGTYPE: 2206,
+          UUID: 2950,
+          TXID_SNAPSHOT: 2970,
+          PG_LSN: 3220,
+          PG_NDISTINCT: 3361,
+          PG_DEPENDENCIES: 3402,
+          TSVECTOR: 3614,
+          TSQUERY: 3615,
+          GTSVECTOR: 3642,
+          REGCONFIG: 3734,
+          REGDICTIONARY: 3769,
+          JSONB: 3802,
+          REGNAMESPACE: 4089,
+          REGROLE: 4096
+        }
+      },
+      text: {},
+      binary: {}
+    },
+    _ending: true,
+    _ended: false,
+    _connecting: false,
+    _connected: true,
+    _connectionError: false,
+    _queryable: false,
+    _activeQuery: null,
+    enableChannelBinding: false,
+    connection: Connection {
+      _events: [Object: null prototype] {
+        newListener: [Function (anonymous)],
+        connect: [Function (anonymous)],
+        sslconnect: [Function (anonymous)],
+        authenticationCleartextPassword: [Function: bound _handleAuthCleartextPassword],
+        authenticationMD5Password: [Function: bound _handleAuthMD5Password],
+        authenticationSASL: [Function: bound _handleAuthSASL],
+        authenticationSASLContinue: [Function: bound _handleAuthSASLContinue] AsyncFunction,
+        authenticationSASLFinal: [Function: bound _handleAuthSASLFinal],
+        backendKeyData: [Function: bound _handleBackendKeyData],
+        error: [Function: bound _handleErrorEvent],
+        errorMessage: [Function: bound _handleErrorMessage],
+        readyForQuery: [Function: bound _handleReadyForQuery],
+        notice: [Function: bound _handleNotice],
+        rowDescription: [Function: bound _handleRowDescription],
+        dataRow: [Function: bound _handleDataRow],
+        portalSuspended: [Function: bound _handlePortalSuspended],
+        emptyQuery: [Function: bound _handleEmptyQuery],
+        commandComplete: [Function: bound _handleCommandComplete],
+        parseComplete: [Function: bound _handleParseComplete],
+        copyInResponse: [Function: bound _handleCopyInResponse],
+        copyData: [Function: bound _handleCopyData],
+        notification: [Function: bound _handleNotification],
+        end: [
+          [Function: bound onceWrapper] {
+            listener: [Function (anonymous)]
+          },
+          [Function: bound onceWrapper] {
+            listener: [Function (anonymous)]
+          }
+        ]
+      },
+      _eventsCount: 23,
+      _maxListeners: undefined,
+      stream: Socket {
+        connecting: false,
+        _hadError: false,
+        _parent: null,
+        _host: 'localhost',
+        _closeAfterHandlingError: false,
+        _events: {
+          close: [Function (anonymous)],
+          error: [Function: reportStreamError],
+          prefinish: undefined,
+          finish: undefined,
+          drain: undefined,
+          data: [Function (anonymous)],
+          end: [ [Function: onReadableStreamEnd], [Function (anonymous)] ],
+          readable: undefined,
+          connect: undefined
+        },
+        _readableState: ReadableState {
+          highWaterMark: 16384,
+          buffer: [],
+          bufferIndex: 0,
+          length: 0,
+          pipes: [],
+          awaitDrainWriters: null,
+          [Symbol(kState)]: 194519348
+        },
+        _writableState: WritableState {
+          highWaterMark: 16384,
+          length: 0,
+          corked: 0,
+          onwrite: [Function: bound onwrite],
+          writelen: 0,
+          bufferedIndex: 0,
+          pendingcb: 0,
+          [Symbol(kState)]: 17563956,
+          [Symbol(kBufferedValue)]: null,
+          [Symbol(kWriteCbValue)]: null
+        },
+        allowHalfOpen: false,
+        _maxListeners: undefined,
+        _eventsCount: 4,
+        _sockname: null,
+        _pendingData: null,
+        _pendingEncoding: '',
+        server: null,
+        _server: null,
+        autoSelectFamilyAttemptedAddresses: [ '::1:5432' ],
+        [Symbol(async_id_symbol)]: 1601,
+        [Symbol(kHandle)]: null,
+        [Symbol(lastWriteQueueSize)]: 0,
+        [Symbol(timeout)]: null,
+        [Symbol(kBuffer)]: null,
+        [Symbol(kBufferCb)]: null,
+        [Symbol(kBufferGen)]: null,
+        [Symbol(shapeMode)]: true,
+        [Symbol(kCapture)]: false,
+        [Symbol(kSetNoDelay)]: true,
+        [Symbol(kSetKeepAlive)]: false,
+        [Symbol(kSetKeepAliveInitialDelay)]: 0,
+        [Symbol(kBytesRead)]: 1531,
+        [Symbol(kBytesWritten)]: 620
+      },
+      _keepAlive: false,
+      _keepAliveInitialDelayMillis: 0,
+      parsedStatements: {},
+      ssl: false,
+      _ending: false,
+      _emitMessage: false,
+      _connecting: true,
+      [Symbol(shapeMode)]: false,
+      [Symbol(kCapture)]: false
+    },
+    _queryQueue: [],
+    binary: false,
+    processID: 12763,
+    secretKey: 1297423060,
+    ssl: false,
+    _connectionTimeoutMillis: 2000,
+    _connectionCallback: null,
+    connectionTimeoutHandle: Timeout {
+      _idleTimeout: -1,
+      _idlePrev: null,
+      _idleNext: null,
+      _idleStart: 91014544,
+      _onTimeout: null,
+      _timerArgs: undefined,
+      _repeat: null,
+      _destroyed: true,
+      [Symbol(refed)]: false,
+      [Symbol(kHasPrimitive)]: false,
+      [Symbol(asyncId)]: 1600,
+      [Symbol(triggerId)]: 0
+    },
+    saslSession: null,
+    release: [Function (anonymous)],
+    readyForQuery: true,
+    hasExecuted: true,
+    _poolUseCount: 2,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  }
+}
+
+Node.js v20.20.0
+Failed running 'src/index.js'

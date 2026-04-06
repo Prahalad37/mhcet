@@ -1,0 +1,50 @@
+---
+description: MHCET stack conventions, env safety, DB/API pitfalls AI often misses
+alwaysApply: true
+---
+
+# MHCET Law Mock — production-minded conventions
+
+These rules reduce common gaps when AI or humans edit this repo.
+
+## Stack
+
+- **Frontend:** Next.js App Router + Tailwind (`frontend/`); dev server **port 3000**.
+- **Backend:** Express (`backend/`); API **port 4000** (or `PORT` in env).
+- **Database:** PostgreSQL; connection via `DATABASE_URL`.
+- Two processes are required for full flows: run API and Next together. Runbook: `README.md`.
+- **Product roadmap & done list:** `docs/ROADMAP.md`. When refactoring or shipping features, **update** its *Implemented*, *API surface*, and *Changelog* sections in the same change set when applicable.
+
+## Environment variables
+
+- **`DATABASE_URL`** must be exactly **one** URL per line. Valid: `DATABASE_URL=postgresql://user:pass@localhost:5432/mhcet`. Invalid: `DATABASE_URL=DATABASE_URL=postgresql://...` (duplicate key in the value causes `ENOTFOUND` / DB down in `/health`).
+- **Secrets stay on the server:** `OPENAI_API_KEY`, `JWT_SECRET`, `DATABASE_URL` belong in **`backend/.env`** only. Never put secrets in `NEXT_PUBLIC_*` (they ship to the browser).
+- **`frontend/.env.local`:** only non-secret public config, e.g. `NEXT_PUBLIC_API_URL=http://localhost:4000`.
+- After changing `.env` or `.env.local`, **restart** the corresponding `npm run dev` process.
+
+## Database
+
+- Schema changes: add a **new** file under `backend/src/db/migrations/`, then run `cd backend && npm run migrate`.
+- Do not rewrite already-applied migration files unless the team agrees to reset/migrate from scratch.
+- If the API runs **on the host** and Postgres runs in Docker with published port `5432`, use **`localhost` or `127.0.0.1`** in `DATABASE_URL`. Use the Docker **service name** as hostname only when the Node process runs **inside** the same Compose network.
+
+## API / Express
+
+- Validate request bodies with **Zod**; use **parameterized** SQL only (no string-concatenated queries).
+- For predictable HTTP errors, use `HttpError` (`backend/src/utils/httpError.js`) and the global `errorHandler` (`backend/src/middleware/errorHandler.js`).
+- **Never log** JWTs, passwords, `Authorization` headers, or `OPENAI_API_KEY`.
+
+## AI explanations
+
+- Logic lives in `backend/src/services/explainService.js`: DB **cache**, per-user **daily quota** (`EXPLAIN_DAILY_LIMIT`, default 5 OpenAI-backed calls per UTC day), server-side **retries**. Do not expose the OpenAI key to the client or move completion calls into Next public bundles.
+
+## Frontend
+
+- HTTP client: `frontend/lib/api.ts`. Keep **`NEXT_PUBLIC_API_URL`** aligned with the API origin; remember **CORS** / `localhost` vs `127.0.0.1` (backend allows both by default).
+- Prefer showing **specific** API error messages when safe (avoid only generic "Something went wrong" when the API returns a clear `error` string).
+
+## Change discipline
+
+- **Minimal diffs:** solve the task without drive-by refactors or unrelated files.
+- Match existing naming, file layout, and patterns in this repo.
+- Do **not** add extra markdown docs unless the user asks (Cursor rules are an exception when requested).

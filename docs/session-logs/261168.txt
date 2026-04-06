@@ -1,0 +1,42 @@
+---
+pid: 94166
+cwd: "/Users/prahalad/Projects/MHCET/backend"
+command: "cd /Users/prahalad/Projects/MHCET/backend && npm run dev"
+started_at: 2026-04-05T13:06:36.825Z
+running_for_ms: 3416360  
+---
+
+> mhcet-api@1.0.0 dev
+> node --watch src/index.js
+
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::4000
+    at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+    at listenInCluster (node:net:1965:12)
+    at Server.listen (node:net:2067:7)
+    at Function.listen (/Users/prahalad/Projects/MHCET/backend/node_modules/express/lib/application.js:635:24)
+    at file:///Users/prahalad/Projects/MHCET/backend/src/index.js:19:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1944:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 4000
+}
+
+Node.js v20.20.0
+Failed running 'src/index.js'
+
+---
+exit_code: unknown
+elapsed_ms: 3418321
+ended_at: 2026-04-05T14:03:35.146Z
+---

@@ -1,0 +1,18 @@
+---
+pid: 16888
+cwd: "/Users/prahalad/Projects/MHCET/backend"
+command: "lsof -ti :4000 | xargs kill -9 2>/dev/null; sleep 1; cd /Users/prahalad/Projects/MHCET/backend && npm start"
+started_at: 2026-04-05T01:38:12.438Z
+running_for_ms: 41007745 
+---
+
+> mhcet-api@1.0.0 start
+> node src/index.js
+
+API listening on http://localhost:4000
+
+---
+exit_code: unknown
+elapsed_ms: 41009807
+ended_at: 2026-04-05T13:01:42.245Z
+---

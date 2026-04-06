@@ -1,0 +1,20 @@
+---
+pid: 38321
+cwd: "/Users/prahalad/Projects/MHCET/e2e"
+command: "sleep 45 && tail -40 /Users/prahalad/.cursor/projects/Users-prahalad-Projects-MHCET/terminals/274037.txt"
+started_at: 2026-04-05T02:05:41.199Z
+running_for_ms: 45017    
+---
+---
+pid: 38132
+cwd: "/Users/prahalad/Projects/MHCET/e2e"
+command: "cd /Users/prahalad/Projects/MHCET && docker compose --profile stack build 2>&1 | tail -35"
+started_at: 2026-04-05T02:05:13.601Z
+running_for_ms: 72342    
+---
+
+---
+exit_code: 0
+elapsed_ms: 45325
+ended_at: 2026-04-05T02:06:26.524Z
+---

@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: mhcet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mhcet"
+          --health-interval 4s
+          --health-timeout 5s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm test
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mhcet
+          JWT_SECRET: ci-jwt-secret-at-least-32-characters-long
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:4000
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: mhcet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mhcet"
+          --health-interval 4s
+          --health-timeout 5s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - name: Install backend deps
+        run: npm ci
+        working-directory: backend
+      - name: Install frontend deps
+        run: npm ci
+        working-directory: frontend
+      - name: Install e2e deps
+        run: npm ci
+        working-directory: e2e
+      - name: Migrate database
+        run: npm run migrate
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mhcet
+      - name: Build Next.js
+        run: npm run build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:4000
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      - name: Start API
+        run: |
+          cd backend
+          node src/index.js &
+          echo $! > /tmp/mhcet-api.pid
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mhcet
+          JWT_SECRET: ci-jwt-secret-at-least-32-characters-long
+          PORT: "4000"
+          NODE_ENV: development
+          CORS_ORIGIN: http://127.0.0.1:3000,http://localhost:3000
+      - name: Wait for API
+        run: npx wait-on -t 120000 http://127.0.0.1:4000/health
+        working-directory: e2e
+      - name: Start Next.js
+        run: |
+          cd frontend
+          npm run start &
+          echo $! > /tmp/mhcet-web.pid
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:4000
+          PORT: "3000"
+      - name: Wait for web
+        run: npx wait-on -t 120000 http://127.0.0.1:3000
+        working-directory: e2e
+      - name: Run Playwright
+        run: npm run test:e2e
+        working-directory: e2e
+        env:
+          CI: true
+          BASE_URL: http://127.0.0.1:3000
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  docker-trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build stack images
+        run: docker compose --profile stack build
+      - name: Run Trivy on API image
+        uses: aquasecurity/trivy-action@v0.28.0
+        with:
+          image-ref: mhcet-api:local
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+      - name: Run Trivy on web image
+        uses: aquasecurity/trivy-action@v0.28.0
+        with:
+          image-ref: mhcet-web:local
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH

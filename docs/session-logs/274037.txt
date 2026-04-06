@@ -1,0 +1,48 @@
+---
+pid: 38132
+cwd: "/Users/prahalad/Projects/MHCET/e2e"
+command: "cd /Users/prahalad/Projects/MHCET && docker compose --profile stack build 2>&1 | tail -35"
+started_at: 2026-04-05T02:05:13.601Z
+running_for_ms: 82354    
+---
+#24 21.26 npm notice New major version of npm available! 10.8.2 -> 11.12.1
+#24 21.26 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.12.1
+#24 21.26 npm notice To update run: npm install -g npm@11.12.1
+#24 21.26 npm notice
+#24 DONE 21.3s
+
+#25 [web runner 3/5] COPY --from=builder /app/public ./public
+#25 ERROR: failed to calculate checksum of ref xkvrc6ye69idj29wbtgftjeak::acu9qpqpu690mvg1j8r4usv21: "/app/public": not found
+------
+ > [web runner 3/5] COPY --from=builder /app/public ./public:
+------
+WARNING: current commit information was not captured by the build: failed to read current commit information with git rev-parse --is-inside-work-tree
+
+Dockerfile:19
+
+--------------------
+
+  17 |     ENV PORT=3000
+
+  18 |     ENV HOSTNAME=0.0.0.0
+
+  19 | >>> COPY --from=builder /app/public ./public
+
+  20 |     COPY --from=builder /app/.next/standalone ./
+
+  21 |     COPY --from=builder /app/.next/static ./.next/static
+
+--------------------
+
+target web: failed to solve: failed to compute cache key: failed to calculate checksum of ref xkvrc6ye69idj29wbtgftjeak::acu9qpqpu690mvg1j8r4usv21: "/app/public": not found
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/otejz9e3smqc6o7mr5iicjaa2
+
+
+---
+exit_code: 1
+elapsed_ms: 82744
+ended_at: 2026-04-05T02:06:36.345Z
+---
