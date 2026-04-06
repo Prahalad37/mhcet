@@ -46,9 +46,11 @@ function isHttpsVercelAppOrigin(origin) {
 export function buildCorsOptions() {
   const envOrigins = parseOrigins();
   const isProd = process.env.NODE_ENV === "production";
+  /** In production, allow `https://*.vercel.app` by default (opt out with CORS_ALLOW_VERCEL_APP=false). */
   const allowVercelApp =
-    process.env.CORS_ALLOW_VERCEL_APP === "true" ||
-    process.env.CORS_ALLOW_VERCEL_APP === "1";
+    isProd &&
+    process.env.CORS_ALLOW_VERCEL_APP !== "false" &&
+    process.env.CORS_ALLOW_VERCEL_APP !== "0";
 
   const allowedOrigins = isProd
     ? envOrigins
@@ -82,7 +84,12 @@ export function createApp() {
     app.set("trust proxy", 1);
   }
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      // Default `same-origin` blocks cross-origin browser reads even when CORS allows the origin.
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    })
+  );
   app.use(requestIdMiddleware);
   app.use(httpLogMiddleware);
   app.use(cors(buildCorsOptions()));

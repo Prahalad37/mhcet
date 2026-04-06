@@ -113,7 +113,7 @@ Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` to match the API origin.
 | Backend  | `EXPLAIN_DAILY_LIMIT` | Max **OpenAI** explanation calls per user per **UTC** day (default `5`). Identical questions reuse DB cache and do **not** count. |
 | Backend  | `FREE_TESTS_PER_DAY` | Max **new mock attempts** per **UTC** day for `users.plan = free` (default `2`). `plan = paid` is unlimited. Admins set plan via `PUT /api/admin/users/:id/plan`. |
 | Backend  | `CORS_ORIGIN`         | Comma-separated browser origins. **Development:** merged with localhost defaults. **Production** (`NODE_ENV=production`): only these origins are allowed; set explicitly (e.g. `https://your-app.vercel.app`). **Required** for browser login from Vercel — without it the API returns **403** on CORS and the UI shows “Unable to connect”. |
-| Backend  | `CORS_ALLOW_VERCEL_APP` | If `true` or `1`, in **production** also allow any origin whose host ends with **`.vercel.app`** over **HTTPS** (optional; use when you do not want to list every preview URL in `CORS_ORIGIN`). |
+| Backend  | `CORS_ALLOW_VERCEL_APP` | In **production**, **`https://*.vercel.app`** is allowed **by default** so Vercel login works without extra env. Set to **`false`** or **`0`** to disable and rely only on **`CORS_ORIGIN`** (stricter). |
 | Backend  | `TRUST_PROXY`         | Set to `true` when the API sits behind a reverse proxy so `X-Forwarded-*` is trusted. |
 | Backend  | `NODE_ENV`            | Use `production` behind a real deployment for stricter CORS and logging behavior. |
 | Backend  | `AI_PROVIDER`         | `mock` (default, no key), `openai`, or `local`. Controls how `POST /api/explain` generates text. **`mock` = no external LLM bill** (good default for prod cost control). |
@@ -167,7 +167,7 @@ Hobby or scaled-to-zero hosts can wake slowly; the first request may see **502 /
 
 ## Troubleshooting registration / login
 
-- **Production: “Unable to connect” on login** — Almost always **CORS**. The Railway API must list your Vercel site in **`CORS_ORIGIN`** (exact origin, e.g. `https://mhcet-coral.vercel.app`, comma-separated if several). Redeploy the API after changing env. Alternatively set **`CORS_ALLOW_VERCEL_APP=true`** on Railway to allow all `https://*.vercel.app` origins. `curl` to `/health` can still be **200** while the browser is blocked.
+- **Production: “Unable to connect” on login** — Almost always **CORS** (browser console shows `Access-Control-Allow-Origin`). **Redeploy the Railway API** (latest code allows `https://*.vercel.app` by default in production). If it still fails, set **`CORS_ORIGIN=https://mhcet-coral.vercel.app`** (exact) on Railway, or **`CORS_ALLOW_VERCEL_APP=false`** only if you intentionally use a strict allow-list. `curl` to `/health` can still be **200** while the browser is blocked.
 - **Backend must be running** on the port in `NEXT_PUBLIC_API_URL` (usually `4000`). Check `GET http://localhost:4000/health` returns **`status`: `"ok"`** and **`database`: `"up"`** (HTTP 200).
 - **`frontend/.env.local`** must set `NEXT_PUBLIC_API_URL` (restart `npm run dev` after changing it).
 - **Postgres must be running** and `DATABASE_URL` correct, with `npm run migrate` applied. DB errors often show as “Something went wrong” from the API. The value must be a single URL (e.g. `DATABASE_URL=postgresql://...`), not `DATABASE_URL=DATABASE_URL=...`. Check `/health`: `database` should be `"up"`.
