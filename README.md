@@ -37,7 +37,8 @@ For local dev you usually keep **only Postgres** in Docker. Install deps once pe
 ```
 
 - **Root** `npm install` pulls `concurrently` + `cross-env` only; **backend** / **frontend** still use their own `node_modules`.
-- **`npm run dev`** first frees **4000** and **3000–3003** (stale `node` / old Next) via [`scripts/kill-dev-ports.cjs`](scripts/kill-dev-ports.cjs), then starts API on **:4000** and Next on **:3000** (frontend sets `WATCHPACK_POLLING=1` to reduce macOS file-watcher / `EMFILE` issues). Set **`SKIP_DEV_PORTS_KILL=1`** if another app legitimately uses those ports.
+- **`npm run dev`** first frees **4000** and **3000–3003** (stale `node` / old Next) via [`scripts/kill-dev-ports.cjs`](scripts/kill-dev-ports.cjs), then starts API on **:4000** and Next on **:3000**. Set **`SKIP_DEV_PORTS_KILL=1`** if another app legitimately uses those ports.
+- If you hit **`EMFILE` / “too many open files”** on macOS, use **`npm run dev:web:poll`** (or `WATCHPACK_POLLING=1` for the frontend only). [`frontend/next.config.mjs`](frontend/next.config.mjs) ignores **`.next`** in watch options so **polling mode** does not infinite-rebuild.
 - If Next still picks **3001+** (all lower ports busy), the API allows **`http://localhost:3000–3999`** in **development** CORS so login works.
 - If dev shows **`Unexpected end of JSON input`** in `loadManifest` / **`getNextFontManifest`**, or endless Fast Refresh / **`hot-update.json` 404**, stop all **`next dev`** processes, then run **`npm run dev:fresh`** (deletes **`frontend/.next`** and starts again) or manually: **`npm run clean:next`** then **`npm run dev`**. Keep a **single** Next dev server on a port.
 
