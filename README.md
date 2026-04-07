@@ -60,6 +60,21 @@ npm run dev
 
 API listens on `http://localhost:4000` (or `PORT`). Health check: `GET /health`.
 
+### Single admin only (delete all other users)
+
+**Destructive:** removes **every** row in `users` (related data cascades), then inserts **exactly one** account: `role = admin`, `plan = paid`.
+
+```bash
+cd backend
+npm run reset-admin-users
+```
+
+Defaults are in [`backend/scripts/resetAdminUsers.js`](backend/scripts/resetAdminUsers.js). Override without editing the file:
+
+`SINGLE_ADMIN_EMAIL` · `SINGLE_ADMIN_PASSWORD`
+
+Use the **same** `DATABASE_URL` as the DB you mean (local `.env` vs Railway env). After running on **production**, log in once and **change the password**.
+
 ### API tests (integration)
 
 Requires Postgres reachable at `DATABASE_URL` (same as dev). Runs migrations then Vitest:
