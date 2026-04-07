@@ -21,7 +21,7 @@ function RegisterForm() {
   const redirectPath =
     nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
       ? nextParam
-      : "/tests";
+      : "/dashboard";
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -57,16 +57,16 @@ function RegisterForm() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Create account
+    <div className="mx-auto max-w-sm space-y-6">
+      <div className="text-center">
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+          Create your account
         </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
           Already have access?{" "}
           <Link
             href="/login"
-            className="font-medium text-sky-700 underline decoration-sky-700/50 outline-none underline-offset-2 hover:decoration-sky-700 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-sky-400"
+            className="font-semibold text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
           >
             Log in
           </Link>
@@ -75,7 +75,7 @@ function RegisterForm() {
       {error ? <Alert message={error} /> : null}
       <form
         onSubmit={onSubmit}
-        className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+        className="glass-card space-y-4 p-6"
       >
         <Input
           label="Email"
@@ -94,9 +94,13 @@ function RegisterForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creating…" : "Sign up"}
-        </Button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary w-full !py-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {loading ? "Creating account…" : "Sign up free →"}
+        </button>
       </form>
     </div>
   );

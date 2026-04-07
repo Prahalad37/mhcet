@@ -1,7 +1,7 @@
 {
   "name": "mhcet",
   "private": true,
-  "description": "MHCET Law Mock — API + Next.js. From repo root: npm install && npm run dev",
+  "description": "PrepMaster UPSC & Law Mock — API + Next.js. From repo root: npm install && npm run dev",
   "scripts": {
     "clean:next": "node scripts/clean-frontend-next.cjs",
     "dev:ports": "node scripts/kill-dev-ports.cjs",

@@ -6,7 +6,7 @@ dotenv.config();
 
 const reset = process.argv.includes("--reset");
 
-/** Five MHCET-style full mocks (30 Q, 120 min each); content in seedData/fullMocks.js */
+/** Five full-length mock tests (30 Q, 120 min each); content in seedData/fullMocks.js */
 const sampleTests = fullMockSets;
 
 async function seed() {

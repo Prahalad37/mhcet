@@ -14,6 +14,7 @@ import type {
   PracticeComplete,
 } from "@/lib/types";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
@@ -227,9 +228,9 @@ export default function PracticeSessionPage() {
       {/* Question */}
       {question ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-base font-medium leading-relaxed text-zinc-900 dark:text-zinc-50">
-            {question.prompt}
-          </p>
+          <div className="text-base font-medium leading-relaxed text-zinc-900 dark:text-zinc-50">
+            <MarkdownRenderer content={question.prompt} />
+          </div>
 
           <ul className="mt-5 space-y-2.5">
             {OPTION_KEYS.map((key) => {
@@ -262,7 +263,7 @@ export default function PracticeSessionPage() {
                     <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current/20 text-xs font-bold">
                       {key}
                     </span>
-                    <span>{optionValue(key)}</span>
+                    <span className="min-w-0 flex-1"><MarkdownRenderer content={optionValue(key)} /></span>
                   </button>
                 </li>
               );

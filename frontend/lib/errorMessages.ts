@@ -1,6 +1,6 @@
 import { ApiError } from "./api";
 
-type ErrorContext = "default" | "explain";
+type ErrorContext = "default";
 
 function messageForStatus(
   status: number,
@@ -29,15 +29,11 @@ function messageForStatus(
     );
   }
   if (status === 502) {
-    if (context === "explain") {
-      return message || "Could not generate an explanation. Please try again.";
-    }
+
     return "The server is temporarily unavailable. Please wait a moment and try again.";
   }
   if (status === 503) {
-    if (context === "explain") {
-      return "AI explanations are not configured. Add OPENAI_API_KEY on the server.";
-    }
+
     return "The service is temporarily down for maintenance. Please try again in a few minutes.";
   }
   if (status === 504) {

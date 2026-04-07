@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.join(__dirname, "migrations");
 
 /** Single-app id for pg_advisory_lock (avoid collisions with other lock users on the same DB). */
-const MIGRATE_ADVISORY_LOCK_KEY = 0x4d48434554; // "MHCET" in hex
+const MIGRATE_ADVISORY_LOCK_KEY = 0x505245504d; // "PREPM" in hex
 
 async function migrate() {
   const client = await pool.connect();

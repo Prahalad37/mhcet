@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createTest } from "@/lib/adminApi";
+import { createTest } from "@/lib/myMocksApi";
 import { getUserErrorMessage } from "@/lib/errorMessages";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -37,7 +37,7 @@ export default function NewTestPage() {
         isActive: formData.isActive,
       });
       
-      router.push(`/admin/tests/${test.id}/questions`);
+      router.push(`/my-mocks/${test.id}/questions`);
     } catch (e) {
       setError(getUserErrorMessage(e, { fallback: "Could not create test." }));
     } finally {

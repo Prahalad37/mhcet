@@ -5,12 +5,12 @@ import dotenv from "dotenv";
 import { authRouter } from "./routes/auth.js";
 import { testsRouter } from "./routes/tests.js";
 import { attemptsRouter } from "./routes/attempts.js";
-import { explainRouter } from "./routes/explain.js";
 import { analyticsRouter } from "./routes/analytics.js";
 import { configRouter } from "./routes/config.js";
 import { practiceRouter } from "./routes/practice.js";
 import { adminRouter } from "./routes/admin.js";
 import { auditRouter } from "./routes/audit.js";
+import { dashboardRouter } from "./routes/dashboard.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { pool } from "./db/pool.js";
 import { requestIdMiddleware } from "./middleware/requestId.js";
@@ -117,7 +117,7 @@ export function createApp() {
 
   app.get("/", (_req, res) =>
     res.json({
-      service: "MHCET API",
+      service: "PrepMaster API",
       health: "/health",
       docs: "REST routes under /api/* (use the Next.js app on port 3000 for the UI).",
     })
@@ -148,12 +148,12 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/tests", testsRouter);
   app.use("/api/attempts", attemptsRouter);
-  app.use("/api/explain", explainRouter);
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/config", configRouter);
   app.use("/api/practice", practiceRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/audit", auditRouter);
+  app.use("/api/dashboard", dashboardRouter);
 
   app.use(errorHandler);
 

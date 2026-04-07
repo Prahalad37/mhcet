@@ -11,7 +11,6 @@ import { useClientMounted } from "@/lib/useClientMounted";
 import type {
   AnalyticsInsights,
   AppConfig,
-  ExplainRequestBody,
   ResultsResponse,
 } from "@/lib/types";
 import { Alert } from "@/components/ui/Alert";
@@ -19,10 +18,9 @@ import { Button } from "@/components/ui/Button";
 import { PageEmptyState } from "@/components/ui/PageEmptyState";
 import { PageErrorState } from "@/components/ui/PageErrorState";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
-import { ExplanationModal } from "@/components/results/ExplanationModal";
 import { StaticExplanationModal } from "@/components/results/StaticExplanationModal";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
-type ExplainState = ExplainRequestBody & { label: string };
 
 type StaticExplainState = { label: string; officialExplanation: string };
 
@@ -65,7 +63,7 @@ export default function ResultsPage() {
   const [data, setData] = useState<ResultsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [explainFor, setExplainFor] = useState<ExplainState | null>(null);
+
   const [staticExplainFor, setStaticExplainFor] =
     useState<StaticExplainState | null>(null);
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -91,7 +89,6 @@ export default function ResultsPage() {
           const cfg = await api<AppConfig>("/api/config", noErrorToast);
           if (!cancelled) setConfig(cfg);
         } catch {
-          if (!cancelled) setConfig({ explainAvailable: false });
         }
       } catch (e) {
         if (!cancelled) {
@@ -173,7 +170,7 @@ export default function ResultsPage() {
   ).length;
   const unansweredCount = data.questions.filter((q) => !q.selectedOption).length;
 
-  const explainOn = config?.explainAvailable === true;
+
   const anyStaticExplain = data.questions.some(
     (q) =>
       !!(q.officialExplanation && String(q.officialExplanation).trim())
@@ -300,27 +297,15 @@ export default function ResultsPage() {
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
           Review
         </h2>
-        {!explainOn && config !== null ? (
-          <p className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-            <strong className="text-zinc-800 dark:text-zinc-200">
-              AI explanations are off.
-            </strong>{" "}
-            {anyStaticExplain ? (
-              <>
-                Built-in <strong className="text-zinc-800 dark:text-zinc-200">Explanation</strong> blocks appear under each question; use{" "}
-                <strong className="text-zinc-800 dark:text-zinc-200">
-                  Open explanation full screen
-                </strong>{" "}
-                for a larger view.
-              </>
-            ) : null}
-            {anyStaticExplain ? " " : null}
-            Add{" "}
-            <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">OPENAI_API_KEY</code> to{" "}
-            <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">backend/.env</code> for
-            AI-generated overviews. Restart the API after changing env.
-          </p>
-        ) : null}
+          {anyStaticExplain ? (
+            <p className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+              Built-in <strong className="text-zinc-800 dark:text-zinc-200">Explanation</strong> blocks appear under each question; use{" "}
+              <strong className="text-zinc-800 dark:text-zinc-200">
+                Open explanation full screen
+              </strong>{" "}
+              for a larger view.
+            </p>
+          ) : null}
         <ul className="space-y-4">
           {data.questions.map((q, idx) => {
             const outcome = outcomeForQuestion(q);
@@ -366,9 +351,9 @@ export default function ResultsPage() {
                       {badgeLabel}
                     </span>
                   </div>
-                  <p className="mt-3 font-medium text-zinc-900 dark:text-zinc-50">
-                    {q.prompt}
-                  </p>
+                  <div className="mt-3 font-medium text-zinc-900 dark:text-zinc-50">
+                    <MarkdownRenderer content={q.prompt} />
+                  </div>
                   <ul className="mt-4 space-y-2">
                     {optionRows.map(({ key: letter, text: optText }) => {
                       const isAnswer = letter === q.correctOption;
@@ -399,7 +384,7 @@ export default function ResultsPage() {
                             {letter}
                           </span>
                           <span className="min-w-0 flex-1 text-zinc-800 dark:text-zinc-200">
-                            {optText}
+                            <MarkdownRenderer content={optText} />
                           </span>
                           {isAnswer ? (
                             <span className="shrink-0 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
@@ -433,47 +418,7 @@ export default function ResultsPage() {
                   ) : null}
                 </div>
                 <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                  {explainOn ? (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="w-full sm:w-auto"
-                        onClick={() =>
-                          setExplainFor({
-                            attemptId,
-                            questionId: q.id,
-                            question: q.prompt,
-                            options: {
-                              A: q.optionA,
-                              B: q.optionB,
-                              C: q.optionC,
-                              D: q.optionD,
-                            },
-                            correctAnswer: q.correctOption,
-                            label: `Question ${idx + 1}`,
-                          })
-                        }
-                      >
-                        AI explanation
-                      </Button>
-                      {staticText ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="w-full sm:w-auto"
-                          onClick={() =>
-                            setStaticExplainFor({
-                              label: `Question ${idx + 1}`,
-                              officialExplanation: staticText,
-                            })
-                          }
-                        >
-                          Open full screen
-                        </Button>
-                      ) : null}
-                    </div>
-                  ) : staticText ? (
+                  {staticText ? (
                     <Button
                       type="button"
                       variant="secondary"
@@ -503,13 +448,7 @@ export default function ResultsPage() {
         </ul>
       </div>
 
-      {explainFor ? (
-        <ExplanationModal
-          open
-          payload={explainFor}
-          onClose={() => setExplainFor(null)}
-        />
-      ) : null}
+
       {staticExplainFor ? (
         <StaticExplanationModal
           open

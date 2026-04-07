@@ -23,25 +23,25 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "MHCET Law Mock Tests",
-    template: "%s · MHCET Law Mock",
+    default: "PrepMaster: UPSC & Law Mock Tests",
+    template: "%s · PrepMaster",
   },
   description:
-    "Timer-based law mock tests with instant scoring and AI explanations for MHCET-style MCQs.",
+    "Massive question banks and timer-based mock tests for UPSC Civil Services, MHCET Law, Current Affairs, and Geography.",
   openGraph: {
-    title: "MHCET Law Mock Tests",
+    title: "PrepMaster: UPSC & Law Mock Tests",
     description:
-      "Mock tests with a timer, instant scoring, and AI explanations for law exam practice.",
+      "Massive question banks and timer-based mock tests for UPSC Civil Services, MHCET Law, Current Affairs, and Geography.",
     url: siteUrl,
-    siteName: "MHCET Law Mock",
+    siteName: "PrepMaster",
     locale: "en_IN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MHCET Law Mock Tests",
+    title: "PrepMaster: UPSC & Law Mock Tests",
     description:
-      "Timer-based law mock tests with instant scoring and AI explanations.",
+      "Massive question banks and timer-based mock tests for UPSC Civil Services, MHCET Law, Current Affairs, and Geography.",
   },
 };
 

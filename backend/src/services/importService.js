@@ -51,29 +51,42 @@ export async function importQuestionsFromCSV(testId, csvText, userId) {
     try {
       await client.query('BEGIN');
       
-      for (const questionData of validRows) {
-        const result = await client.query(`
+      const BATCH_SIZE = 1000;
+      for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
+        const batch = validRows.slice(i, i + BATCH_SIZE);
+
+        let queryTemplate = `
           INSERT INTO questions (
             test_id, prompt, option_a, option_b, option_c, option_d,
             correct_option, subject, hint, official_explanation, order_index
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-          RETURNING id, prompt
-        `, [
-          testId,
-          questionData.prompt,
-          questionData.optionA,
-          questionData.optionB,
-          questionData.optionC,
-          questionData.optionD,
-          questionData.correctOption,
-          questionData.subject,
-          questionData.hint,
-          questionData.officialExplanation,
-          nextOrderIndex++
-        ]);
+          ) VALUES
+        `;
+        const values = [];
+        const placeholders = [];
+
+        batch.forEach((questionData, index) => {
+          const offset = index * 11;
+          placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`);
+
+          values.push(
+            testId,
+            questionData.prompt,
+            questionData.optionA,
+            questionData.optionB,
+            questionData.optionC,
+            questionData.optionD,
+            questionData.correctOption,
+            questionData.subject,
+            questionData.hint,
+            questionData.officialExplanation,
+            nextOrderIndex++
+          );
+        });
+
+        queryTemplate += placeholders.join(', ') + ' RETURNING id, prompt';
         
-        importedQuestions.push(result.rows[0]);
+        const result = await client.query(queryTemplate, values);
+        importedQuestions.push(...result.rows);
       }
       
       await client.query('COMMIT');

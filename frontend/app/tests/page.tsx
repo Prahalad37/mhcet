@@ -123,17 +123,16 @@ export default function TestsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Available tests
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+          Available Tests
         </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Each attempt is timed. Submit when you are done to see detailed
-          results. We highlight weak topics and suggest what to try next.
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          Each attempt is timed. Submit to see detailed results and topic insights.
         </p>
         {appConfig?.plan === "free" ? (
-          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-            Free plan: {used} / {cap} full mocks started today (UTC). Paid accounts have unlimited
-            mocks.
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+            <span>⚡</span>
+            Free plan: {used} / {cap} mocks today · Resets midnight UTC
           </p>
         ) : null}
       </div>
@@ -189,40 +188,33 @@ export default function TestsPage() {
 
       {insights && insights.recommendedTests.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            Recommended for you
+          <h2 className="flex items-center gap-2 text-sm font-bold text-zinc-900 dark:text-zinc-50">
+            <span className="text-base">🎯</span> Recommended for you
           </h2>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {insights.recommendedTests.map((t) => (
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {insights.recommendedTests.map((t, i) => (
               <li
                 key={t.id}
-                className="flex flex-col rounded-2xl border border-emerald-200/90 bg-emerald-50/50 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/30"
+                className={`glass-card fade-up flex flex-col p-5`}
+                style={{ animationDelay: `${i * 0.07}s` }}
               >
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                <span className="inline-flex w-fit items-center rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                   {t.topic}
                 </span>
-                <h3 className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50">
-                  {t.title}
-                </h3>
-                <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-200/80">
-                  {t.reason}
-                </p>
-                <p className="mt-2 text-xs text-zinc-500">
-                  {t.questionCount} questions ·{" "}
-                  {Math.ceil(t.durationSeconds / 60)} min
+                <h3 className="mt-2 font-semibold text-zinc-900 dark:text-zinc-50">{t.title}</h3>
+                <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">{t.reason}</p>
+                <p className="mt-2 text-xs text-zinc-400">
+                  {t.questionCount} questions · {Math.ceil(t.durationSeconds / 60)} min
                 </p>
                 {canStartNewMock ? (
                   <Link
                     href={`/tests/${t.id}/take`}
-                    className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 sm:w-auto"
+                    className="btn-primary mt-4 w-full !justify-center !py-2"
                   >
-                    Start test
+                    Start test →
                   </Link>
                 ) : (
-                  <span
-                    className="mt-3 inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 sm:w-auto"
-                    title="Daily mock limit reached"
-                  >
+                  <span className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-400 dark:bg-zinc-800">
                     Limit reached
                   </span>
                 )}
@@ -252,67 +244,60 @@ export default function TestsPage() {
 
       {!loading && !error && tests && tests.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            All tests
-          </h2>
+          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">All tests</h2>
           <ul className="grid gap-4 sm:grid-cols-2">
-            {tests.map((t) => {
+            {tests.map((t, i) => {
               const resumeId = resumeByTestId[t.id];
+              const isRec = recommendedIds.has(t.id);
               return (
-              <li
-                key={t.id}
-                className={`flex flex-col rounded-2xl border p-5 shadow-sm dark:bg-zinc-950 ${
-                  recommendedIds.has(t.id)
-                    ? "border-emerald-200/80 bg-white dark:border-emerald-900/50"
-                    : "border-zinc-200 bg-white dark:border-zinc-800"
-                }`}
-              >
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  {t.topic}
-                </span>
-                <h2 className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50">
-                  {t.title}
-                </h2>
-                {recommendedIds.has(t.id) ? (
-                  <p className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                    Recommended for your level
-                  </p>
-                ) : null}
-                {t.description ? (
-                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    {t.description}
-                  </p>
-                ) : null}
-                <p className="mt-3 text-xs text-zinc-500">
-                  {t.questionCount} questions ·{" "}
-                  {Math.ceil(t.durationSeconds / 60)} min
-                </p>
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                  {resumeId ? (
-                    <Link
-                      href={`/tests/${t.id}/take?attemptId=${resumeId}`}
-                      className="inline-flex w-full items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-950 shadow-sm transition-colors hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100 dark:hover:bg-amber-950/60 sm:w-auto"
-                    >
-                      Continue attempt
-                    </Link>
-                  ) : null}
-                  {canStartNewMock ? (
-                    <Link
-                      href={`/tests/${t.id}/take`}
-                      className="inline-flex w-full items-center justify-center rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-700 sm:w-auto"
-                    >
-                      Start new attempt
-                    </Link>
-                  ) : (
-                    <span
-                      className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-500 shadow-sm dark:bg-zinc-800 dark:text-zinc-400 sm:w-auto"
-                      title="Daily mock limit reached"
-                    >
-                      Start new attempt
+                <li
+                  key={t.id}
+                  className={`glass-card fade-up flex flex-col p-5 ${isRec ? "border-indigo-200/80 dark:border-indigo-800/50" : ""}`}
+                  style={{ animationDelay: `${i * 0.06}s` }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="inline-flex items-center rounded-lg bg-zinc-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                      {t.topic}
                     </span>
-                  )}
-                </div>
-              </li>
+                    {isRec && (
+                      <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                        ★ Recommended
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="mt-2 font-semibold text-zinc-900 dark:text-zinc-50">{t.title}</h2>
+                  {t.description ? (
+                    <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">{t.description}</p>
+                  ) : null}
+                  <p className="mt-3 text-xs text-zinc-400">
+                    {t.questionCount} questions · {Math.ceil(t.durationSeconds / 60)} min
+                  </p>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    {resumeId ? (
+                      <Link
+                        href={`/tests/${t.id}/take?attemptId=${resumeId}`}
+                        className="inline-flex w-full items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 shadow-sm transition-colors hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100 sm:w-auto"
+                      >
+                        ↩ Continue attempt
+                      </Link>
+                    ) : null}
+                    {canStartNewMock ? (
+                      <Link
+                        href={`/tests/${t.id}/take`}
+                        className="btn-primary w-full !justify-center !py-2.5 sm:w-auto"
+                      >
+                        Start test →
+                      </Link>
+                    ) : (
+                      <span
+                        className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-zinc-100 px-4 py-2.5 text-sm font-medium text-zinc-400 dark:bg-zinc-800 sm:w-auto"
+                        title="Daily mock limit reached"
+                      >
+                        Start test
+                      </span>
+                    )}
+                  </div>
+                </li>
               );
             })}
           </ul>

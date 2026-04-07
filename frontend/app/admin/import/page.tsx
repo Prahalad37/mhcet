@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getAdminTests, importQuestionsCSV, getCSVTemplate } from "@/lib/adminApi";
 import { getUserErrorMessage } from "@/lib/errorMessages";
-import { groupTestsByMhcetSyllabus } from "@/lib/mhcetTestGroups";
+import { groupTestsBySection } from "@/lib/testGroups";
 import { ADMIN_TOPIC_OPTIONS } from "@/lib/adminTopicOptions";
 import type { AdminTest, ImportResult } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
@@ -25,7 +25,7 @@ function AdminImportForm() {
 
   const groupedTests = useMemo(() => {
     if (!tests?.length) return [];
-    return groupTestsByMhcetSyllabus(tests);
+    return groupTestsBySection(tests);
   }, [tests]);
 
   const loadTests = async () => {
@@ -97,7 +97,7 @@ function AdminImportForm() {
           Import Questions
         </h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-          CSV ko <strong className="font-medium text-zinc-800 dark:text-zinc-200">us mock</strong> mein import karo jiska topic MHCET syllabus ke section se match ho (Legal, GK, Logical, English, Math, ya full mixed mock).
+          Upload your CSV into the <strong className="font-medium text-zinc-800 dark:text-zinc-200">mock test</strong> whose topic matches your intended syllabus section (e.g., UPSC, General Studies, Current Affairs, Legal Aptitude).
         </p>
       </div>
 
@@ -107,7 +107,7 @@ function AdminImportForm() {
           CSV Template
         </h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Har row mein <code className="rounded bg-zinc-200/80 px-1 text-xs dark:bg-zinc-700">subject</code> column MHCET sections se match kare: Legal Aptitude, GK &amp; Current Affairs, Logical Reasoning, English, Basic Math.
+          Ensure each row has a valid <code className="rounded bg-zinc-200/80 px-1 text-xs dark:bg-zinc-700">subject</code> corresponding to our topics (e.g., UPSC, General Studies, Current Affairs, Legal Aptitude).
         </p>
         <Button
           variant="secondary"
@@ -128,7 +128,7 @@ function AdminImportForm() {
           {/* Test Selection */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Target mock (MHCET syllabus sections)
+              Target mock (UPSC/Law sections)
             </label>
             <select
               value={selectedTest}
@@ -155,7 +155,7 @@ function AdminImportForm() {
                 >
                   Naya test banao
                 </Link>{" "}
-                aur topic chunote waqt MHCET ke hisaab se:{" "}
+                and pick topics matching the syllabus:{" "}
                 <span className="whitespace-normal break-words">
                   {ADMIN_TOPIC_OPTIONS.slice(0, 6).join(" · ")}
                   …

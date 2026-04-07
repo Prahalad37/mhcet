@@ -1,5 +1,5 @@
 /**
- * Five full-length-style MHCET Law (5-Year LLB) practice mocks.
+ * Five full-length-style PrepMaster Mock (5-Year LLB) practice mocks.
  * Pattern aligned with public syllabus summaries: Legal Aptitude, GK, Logical Reasoning,
  * Basic Math, English — scaled to 30 MCQs per set (8+6+8+2+6). Timed at 120 minutes.
  * Questions are original / paraphrased for practice; not copied from proprietary papers.
@@ -35,7 +35,7 @@ const DESC = (n) =>
 
 export const fullMockSets = [
   {
-    title: "MHCET Law — Full Mock Set 1 of 5",
+    title: "PrepMaster Mock — Full Mock Set 1 of 5",
     topic: MIXED_TOPIC,
     description: DESC(1),
     durationSeconds: MOCK_DURATION_SEC,
@@ -320,7 +320,7 @@ export const fullMockSets = [
     ],
   },
   {
-    title: "MHCET Law — Full Mock Set 2 of 5",
+    title: "PrepMaster Mock — Full Mock Set 2 of 5",
     topic: MIXED_TOPIC,
     description: DESC(2),
     durationSeconds: MOCK_DURATION_SEC,
@@ -598,7 +598,7 @@ export const fullMockSets = [
     ],
   },
   {
-    title: "MHCET Law — Full Mock Set 3 of 5",
+    title: "PrepMaster Mock — Full Mock Set 3 of 5",
     topic: MIXED_TOPIC,
     description: DESC(3),
     durationSeconds: MOCK_DURATION_SEC,
@@ -876,7 +876,7 @@ export const fullMockSets = [
     ],
   },
   {
-    title: "MHCET Law — Full Mock Set 4 of 5",
+    title: "PrepMaster Mock — Full Mock Set 4 of 5",
     topic: MIXED_TOPIC,
     description: DESC(4),
     durationSeconds: MOCK_DURATION_SEC,
@@ -1154,7 +1154,7 @@ export const fullMockSets = [
     ],
   },
   {
-    title: "MHCET Law — Full Mock Set 5 of 5",
+    title: "PrepMaster Mock — Full Mock Set 5 of 5",
     topic: MIXED_TOPIC,
     description: DESC(5),
     durationSeconds: MOCK_DURATION_SEC,

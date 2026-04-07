@@ -75,6 +75,8 @@ Defaults are in [`backend/scripts/resetAdminUsers.js`](backend/scripts/resetAdmi
 
 Use the **same** `DATABASE_URL` as the DB you mean (local `.env` vs Railway env). After running on **production**, log in once and **change the password**.
 
+**Railway from your laptop:** URLs with host `postgres.railway.internal` only work **inside** Railway’s network (the API container). To run `reset-admin-users` on your machine against production data, copy the **public** TCP connection string from Railway → Postgres → **Connect** (not the internal hostname), put it in `backend/.env.railway` (see [`backend/.env.railway.example`](backend/.env.railway.example); that file is gitignored). The script loads `.env` first, then `.env.railway` overrides `DATABASE_URL` when present. Alternatively run the script **on Railway**: `railway run --service <api> npm run reset-admin-users` (uses the service’s env, including internal DB URL).
+
 ### API tests (integration)
 
 Requires Postgres reachable at `DATABASE_URL` (same as dev). Runs migrations then Vitest:

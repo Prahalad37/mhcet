@@ -5,17 +5,31 @@
  * Local:
  *   cd backend && npm run reset-admin-users
  *
- * Production (Railway / any host): set DATABASE_URL to prod, then same command.
+ * Railway DB from your laptop: put PUBLIC `DATABASE_URL` in `backend/.env.railway` (gitignored).
+ * `postgres.railway.internal` only works inside Railway — not from your computer.
+ *
  * Override defaults without editing this file:
  *   SINGLE_ADMIN_EMAIL=you@example.com SINGLE_ADMIN_PASSWORD='YourLongPass!' npm run reset-admin-users
  *
  * Change the password after first login in production.
  */
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
-import { pool } from "../src/db/pool.js";
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const backendRoot = path.join(__dirname, "..");
+
+dotenv.config({ path: path.join(backendRoot, ".env") });
+const railwayEnvPath = path.join(backendRoot, ".env.railway");
+if (fs.existsSync(railwayEnvPath)) {
+  dotenv.config({ path: railwayEnvPath, override: true });
+  console.log("Using backend/.env.railway (overrides DATABASE_URL from .env when set).\n");
+}
+
+const { pool } = await import("../src/db/pool.js");
 
 const email = (process.env.SINGLE_ADMIN_EMAIL || "superadmin@mhcet.local").toLowerCase().trim();
 const password = process.env.SINGLE_ADMIN_PASSWORD || "MhcetSuperAdmin!2026";

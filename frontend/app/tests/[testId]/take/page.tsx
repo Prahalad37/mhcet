@@ -23,6 +23,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { TestTimer } from "@/components/test/TestTimer";
 import { OptionButton } from "@/components/test/OptionButton";
 import { QuestionPalette } from "@/components/test/QuestionPalette";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 type SelectionKey = "A" | "B" | "C" | "D";
 
@@ -57,6 +58,7 @@ function TakeTestInner() {
     () => new Set<number>()
   );
   const [tabLeaveWarning, setTabLeaveWarning] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
 
   const submitLockRef = useRef(false);
   const submitSucceededRef = useRef(false);
@@ -182,6 +184,52 @@ function TakeTestInner() {
     }
   }, []);
 
+  const flushOfflineAnswers = useCallback(async () => {
+    if (!attempt || submitting) return;
+    const key = `offline-answers-${attempt.attemptId}`;
+    const stored = localStorage.getItem(key);
+    if (!stored) return;
+    try {
+      const records = JSON.parse(stored) as Record<string, string>;
+      const keys = Object.keys(records);
+      if (keys.length === 0) return;
+      
+      for (const qId of keys) {
+        await api(`/api/attempts/${attempt.attemptId}/answers`, {
+          method: "PATCH",
+          body: JSON.stringify({ questionId: qId, selectedOption: records[qId] }),
+        });
+        const fresh = JSON.parse(localStorage.getItem(key) || "{}");
+        delete fresh[qId];
+        localStorage.setItem(key, JSON.stringify(fresh));
+      }
+    } catch {
+      // Ignored, will retry next interval
+    }
+  }, [attempt, submitting]);
+
+  useEffect(() => {
+    if (!attempt || submitting) return;
+    const intervalId = setInterval(flushOfflineAnswers, 5000);
+    return () => clearInterval(intervalId);
+  }, [attempt, submitting, flushOfflineAnswers]);
+
+  useEffect(() => {
+    if (!window) return;
+    const handleOffline = () => setIsOffline(true);
+    const handleOnline = () => {
+      setIsOffline(false);
+      flushOfflineAnswers();
+    };
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    setIsOffline(!navigator.onLine);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [flushOfflineAnswers]);
+
   const submit = useCallback(async () => {
     if (!attempt || submitLockRef.current || submitSucceededRef.current) return;
     submitLockRef.current = true;
@@ -272,6 +320,15 @@ function TakeTestInner() {
             ...noErrorToast,
           });
         } catch (e) {
+          if (e instanceof ApiError && e.status === 0) {
+            setIsOffline(true);
+            const key = `offline-answers-${attemptIdForSave}`;
+            const offlineData = JSON.parse(localStorage.getItem(key) || "{}");
+            offlineData[questionId] = value;
+            localStorage.setItem(key, JSON.stringify(offlineData));
+            setError(null);
+            return;
+          }
           if (e instanceof ApiError && e.status === 401) {
             redirectToLogin(router, { next: nextPath });
             return;
@@ -412,6 +469,16 @@ function TakeTestInner() {
         </div>
       ) : null}
 
+      {isOffline ? (
+        <div
+          className="rounded-xl border border-rose-200/90 bg-rose-50/95 px-4 py-3 text-sm text-rose-950 dark:border-rose-800/70 dark:bg-rose-950/40 dark:text-rose-100 flex items-center justify-between"
+          role="status"
+        >
+          <span>You are offline. Your answers are being saved locally and will sync when reconnected.</span>
+          <Spinner />
+        </div>
+      ) : null}
+
       {error ? <Alert message={error} /> : null}
 
       <QuestionPalette
@@ -428,12 +495,10 @@ function TakeTestInner() {
         className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
         key={q.id}
       >
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 mb-2">
           Question {safeIndex + 1} of {questionCount}
         </p>
-        <p className="mt-2 text-base font-medium text-zinc-900 dark:text-zinc-100">
-          {q.prompt}
-        </p>
+        <MarkdownRenderer content={q.prompt} />
         <div className="mt-4 space-y-2">
           <OptionButton
             label="A"

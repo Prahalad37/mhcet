@@ -4,19 +4,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { clearToken, getToken } from "@/lib/auth";
-import { Button } from "@/components/ui/Button";
 
 export function SiteNav() {
   const router = useRouter();
   const pathname = usePathname();
   const [authed, setAuthed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const token = getToken();
     setAuthed(!!token);
-    
-    // Check if user is admin
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -29,64 +27,84 @@ export function SiteNav() {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   function logout() {
     clearToken();
     setAuthed(false);
     router.push("/login");
   }
 
-  const navLink =
-    "whitespace-nowrap rounded-lg px-3 py-1.5 text-zinc-700 outline-none hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-zinc-300 dark:hover:bg-zinc-900";
-  const navLinkAdmin =
-    "whitespace-nowrap rounded-lg px-3 py-1.5 text-amber-700 outline-none hover:bg-amber-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:text-amber-300 dark:hover:bg-amber-950/30";
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
+
+  const navLink = (href: string) =>
+    `whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium outline-none transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
+      isActive(href)
+        ? "nav-active text-indigo-600 dark:text-indigo-400"
+        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-100"
+    }`;
 
   return (
-    <header className="border-b border-zinc-200/80 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
-      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+    <header
+      className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+        scrolled
+          ? "border-zinc-200/80 bg-white/90 shadow-sm backdrop-blur-xl dark:border-white/5 dark:bg-zinc-950/90"
+          : "border-transparent bg-white/70 backdrop-blur-md dark:bg-zinc-950/50"
+      }`}
+    >
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+        {/* Logo */}
         <Link
-          href="/"
-          className="shrink-0 rounded-lg text-sm font-semibold tracking-tight text-zinc-900 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-zinc-50"
+          href={authed ? "/dashboard" : "/"}
+          className="flex items-center gap-2 rounded-lg outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
         >
-          MHCET Law Mock
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 10L7 3L12 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4.5 7.5H9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <span className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            PrepMaster
+          </span>
         </Link>
-        <nav
-          className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 text-sm sm:justify-end"
-          aria-label="Primary"
-        >
+
+        {/* Nav */}
+        <nav className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2" aria-label="Primary">
           {authed ? (
             <>
-              <Link href="/tests" className={navLink}>
-                Tests
-              </Link>
-              <Link href="/practice" className={navLink}>
-                Practice
-              </Link>
-              <Link href="/attempts" className={navLink}>
-                History
-              </Link>
+              <Link href="/dashboard" className={navLink("/dashboard")}>Home</Link>
+              <Link href="/tests" className={navLink("/tests")}>Tests</Link>
+              <Link href="/my-mocks" className={navLink("/my-mocks")}>My Mocks</Link>
+              <Link href="/attempts" className={navLink("/attempts")}>History</Link>
               {isAdmin && (
-                <Link href="/admin" className={navLinkAdmin}>
+                <Link
+                  href="/admin"
+                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-amber-600 outline-none transition-colors hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                >
                   Admin
                 </Link>
               )}
-              <Button
-                variant="secondary"
-                className="!shrink-0 !whitespace-nowrap !py-1.5 !text-xs"
+              <button
                 onClick={logout}
+                className="ml-1 whitespace-nowrap rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm outline-none transition-all hover:border-zinc-300 hover:shadow dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
               >
                 Log out
-              </Button>
+              </button>
             </>
           ) : (
             <>
-              <Link href="/login" className={navLink}>
-                Log in
-              </Link>
+              <Link href="/login" className={navLink("/login")}>Log in</Link>
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm outline-none hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                className="btn-primary ml-1 !py-1.5 !text-xs"
               >
-                Sign up
+                Sign up free
               </Link>
             </>
           )}

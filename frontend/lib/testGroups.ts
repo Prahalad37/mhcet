@@ -1,8 +1,7 @@
 import type { AdminTest } from "./types";
 
 /**
- * Maps each admin test `topic` to an MHCET 5-year LLB–style section label for UI grouping.
- * (Exam sections: Legal aptitude, GK, Logical reasoning, English, Math; plus full mocks.)
+ * Maps each admin test `topic` to a group section label for UI grouping.
  */
 export function syllabusSectionForTopic(topic: string): string {
   const t = topic.trim();
@@ -15,10 +14,13 @@ export function syllabusSectionForTopic(topic: string): string {
       "Tort Law",
     ].includes(t)
   ) {
-    return "Legal aptitude & legal reasoning";
+    return "Legal aptitude & legal reasoning (MHCET/UPSC Law)";
   }
-  if (t === "GK & Current Affairs") {
-    return "General knowledge & current affairs";
+  if (t === "GK & Current Affairs" || t === "Current Affairs") {
+    return "General knowledge & current affairs (UPSC/MHCET)";
+  }
+  if (t === "Geography" || t === "History" || t === "Economy") {
+    return "General Studies (UPSC)";
   }
   if (t === "Logical Reasoning") {
     return "Logical & analytical reasoning";
@@ -27,25 +29,26 @@ export function syllabusSectionForTopic(topic: string): string {
     return "Quantitative techniques (Basic Math)";
   }
   if (t === "English") {
-    return "English";
+    return "English Comprehension";
   }
-  if (t === "Mixed (MHCET 5-Year pattern)") {
-    return "Full mock — all sections (MHCET pattern)";
+  if (t === "Mixed (UPSC Prelims)" || t === "Mixed (MHCET 5-Year pattern)") {
+    return "Full mock — all sections";
   }
   return "Other / custom topic";
 }
 
 const SECTION_ORDER: string[] = [
-  "Full mock — all sections (MHCET pattern)",
-  "Legal aptitude & legal reasoning",
-  "General knowledge & current affairs",
+  "Full mock — all sections",
+  "General Studies (UPSC)",
+  "General knowledge & current affairs (UPSC/MHCET)",
+  "Legal aptitude & legal reasoning (MHCET/UPSC Law)",
   "Logical & analytical reasoning",
   "Quantitative techniques (Basic Math)",
-  "English",
+  "English Comprehension",
   "Other / custom topic",
 ];
 
-export function groupTestsByMhcetSyllabus(tests: AdminTest[]): {
+export function groupTestsBySection(tests: AdminTest[]): {
   section: string;
   tests: AdminTest[];
 }[] {

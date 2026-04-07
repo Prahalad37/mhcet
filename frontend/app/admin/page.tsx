@@ -87,7 +87,7 @@ export default function AdminDashboard() {
           Admin Dashboard
         </h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-          Overview of your MHCET Law Mock platform
+          Overview of your PrepMaster platform
         </p>
       </div>
 

@@ -3,7 +3,7 @@ import { HttpError } from "./httpError.js";
 /** Max mock attempts per UTC day for `plan = free`. Paid users are unlimited. */
 export function freeTestsPerDay() {
   const n = Number(process.env.FREE_TESTS_PER_DAY);
-  return Number.isFinite(n) && n >= 0 ? n : 2;
+  return Number.isFinite(n) && n >= 0 ? n : 999999;
 }
 
 /**

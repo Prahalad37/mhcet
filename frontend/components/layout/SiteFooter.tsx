@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-zinc-200/80 bg-white/60 py-8 dark:border-zinc-800 dark:bg-zinc-950/40">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          © {year} MHCET Law Mock — practice tests for exam preparation.
+          © {year} PrepMaster — practice tests for exam preparation.
         </p>
         <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
           <Link

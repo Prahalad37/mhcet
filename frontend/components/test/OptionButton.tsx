@@ -10,6 +10,8 @@ type Props = {
   onSelect: () => void;
 };
 
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
+
 function OptionButtonInner({
   label,
   text,
@@ -31,7 +33,9 @@ function OptionButtonInner({
       <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
         {label}
       </span>
-      <span className="min-w-0 flex-1 text-zinc-800 dark:text-zinc-100">{text}</span>
+      <span className="min-w-0 flex-1 text-zinc-800 dark:text-zinc-100">
+        <MarkdownRenderer content={text} />
+      </span>
     </button>
   );
 }

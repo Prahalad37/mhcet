@@ -62,9 +62,6 @@ export type AttemptResume = AttemptStart & {
 };
 
 export type AppConfig = {
-  explainAvailable: boolean;
-  /** Backend hint: mock | openai | local */
-  aiProvider?: string;
   /** free = daily cap on new mock attempts (UTC); paid = unlimited */
   plan?: "free" | "paid";
   testsTodayUtc?: number;
@@ -141,26 +138,6 @@ export type PracticeComplete = {
   completedAt: string;
 };
 
-/** Matches POST /api/explain response */
-export type ExplainResponse = {
-  answer: string;
-  explanation: string;
-  concept: string;
-  example: string;
-};
-
-export type ExplainRequestBody = {
-  attemptId: string;
-  questionId: string;
-  question: string;
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-  correctAnswer: string;
-};
 
 /* ── Admin types ────────────────────────────── */
 

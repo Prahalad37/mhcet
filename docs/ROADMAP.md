@@ -9,6 +9,7 @@
 
 | Date (UTC) | Change |
 |------------|--------|
+| 2026-04-07 | **`reset-admin-users`:** optional **`backend/.env.railway`** (gitignored) loads after `.env` so a **public** prod `DATABASE_URL` can be used from a laptop; internal `*.railway.internal` URLs documented as Railway-only. [`backend/.env.railway.example`](backend/.env.railway.example) + README. |
 | 2026-04-07 | **`reset-admin-users`:** only **one** admin user (`SINGLE_ADMIN_EMAIL` / `SINGLE_ADMIN_PASSWORD` optional); deletes all other users. README + `.env.example`. |
 | 2026-04-07 | **Frontend:** **`AppToaster`** uses static **`sonner`** import + CSS (drops `next/dynamic` wrapper) to avoid dev **`options.factory` / `undefined.call`** webpack runtime errors with HMR. |
 | 2026-04-07 | **Dev:** default **`npm run dev`** no longer sets **`WATCHPACK_POLLING`** (was causing endless Next rebuilds); **`dev:web:poll`** opt-in; **`next.config`** `watchOptions.ignored` includes **`.next`**. |
