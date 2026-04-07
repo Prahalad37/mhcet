@@ -1,9 +1,15 @@
 import fs from 'fs';
-import { pool } from '../src/db/pool.js'; // Adjust path if running from scripts/
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { pool } from '../src/db/pool.js'; 
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function parseAndSeed() {
   console.log("Starting parsing of mock test...");
-  const content = fs.readFileSync('/tmp/mock_part1.txt', 'utf-8');
+  const mockPath = path.join(__dirname, 'mock_part1.txt');
+  const content = fs.readFileSync(mockPath, 'utf-8');
   
   // 1. Extract the answer key
   const answers = {};
