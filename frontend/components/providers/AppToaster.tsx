@@ -1,17 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { Toaster } from "sonner";
+import "sonner/dist/styles.css";
 
-/** SSR off — avoids broken server vendor chunks for `sonner` in Next 14. */
-const Toaster = dynamic(
-  () =>
-    import("sonner").then((mod) => {
-      const C = mod.Toaster;
-      return { default: C };
-    }),
-  { ssr: false, loading: () => null }
-);
-
+/** Client-only; `next.config.mjs` lists `sonner` in `transpilePackages` for App Router. */
 export function AppToaster() {
   return (
     <Toaster

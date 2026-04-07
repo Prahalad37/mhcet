@@ -9,6 +9,7 @@
 
 | Date (UTC) | Change |
 |------------|--------|
+| 2026-04-07 | **Frontend:** **`AppToaster`** uses static **`sonner`** import + CSS (drops `next/dynamic` wrapper) to avoid dev **`options.factory` / `undefined.call`** webpack runtime errors with HMR. |
 | 2026-04-07 | **Dev:** default **`npm run dev`** no longer sets **`WATCHPACK_POLLING`** (was causing endless Next rebuilds); **`dev:web:poll`** opt-in; **`next.config`** `watchOptions.ignored` includes **`.next`**. |
 | 2026-04-07 | **Dev:** **`npm run clean:next`** / **`npm run dev:fresh`** remove corrupt **`frontend/.next`** (fixes Next `loadManifest` / font manifest JSON errors); README troubleshooting. |
 | 2026-04-07 | **Dev:** root **`npm run dev`** runs **`kill-dev-ports`** (4000, 3000–3003) then **concurrently**; backend dev CORS allows **`localhost` / `127.0.0.1` ports 3000–3999**. README updated. |
