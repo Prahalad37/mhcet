@@ -9,6 +9,7 @@
 
 | Date (UTC) | Change |
 |------------|--------|
+| 2026-04-07 | **Dev:** **`npm run clean:next`** / **`npm run dev:fresh`** remove corrupt **`frontend/.next`** (fixes Next `loadManifest` / font manifest JSON errors); README troubleshooting. |
 | 2026-04-07 | **Dev:** root **`npm run dev`** runs **`kill-dev-ports`** (4000, 3000–3003) then **concurrently**; backend dev CORS allows **`localhost` / `127.0.0.1` ports 3000–3999**. README updated. |
 | 2026-04-07 | **Railway deploy:** removed **`preDeployCommand`** from `backend/railway.json` (pre-deploy often lacks `DATABASE_URL`); migrations run in **`docker-entrypoint.sh`** unless `SKIP_DB_MIGRATE=true`. README updated. |
 | 2026-04-07 | **CORS (Railway + Vercel):** production defaults to allowing `https://*.vercel.app` (opt out `CORS_ALLOW_VERCEL_APP=false`); Helmet **`crossOriginResourcePolicy: cross-origin`** so browser reads succeed after CORS. README troubleshooting for login + `CORS_ORIGIN`. |

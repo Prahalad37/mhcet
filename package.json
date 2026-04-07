@@ -3,8 +3,10 @@
   "private": true,
   "description": "MHCET Law Mock — API + Next.js. From repo root: npm install && npm run dev",
   "scripts": {
+    "clean:next": "node scripts/clean-frontend-next.cjs",
     "dev:ports": "node scripts/kill-dev-ports.cjs",
     "dev": "npm run dev:ports && concurrently -k -n api,web -c blue,magenta \"npm run dev --prefix backend\" \"cross-env WATCHPACK_POLLING=1 npm run dev --prefix frontend\"",
+    "dev:fresh": "npm run clean:next && npm run dev",
     "dev:api": "npm run dev --prefix backend",
     "dev:web": "cross-env WATCHPACK_POLLING=1 npm run dev --prefix frontend"
   },
