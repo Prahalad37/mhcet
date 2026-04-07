@@ -24,7 +24,24 @@ dotenv.config();
 const defaultDevOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  // Next.js falls back to 3001 when 3000 is in use (`Port 3000 is in use, trying 3001`).
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
 ];
+
+/** Dev only: allow any http://localhost:3xxx / 127.0.0.1:3xxx (Next picks 3002, 3003, …). */
+function isLocalDevBrowserOrigin(origin) {
+  if (process.env.NODE_ENV === "production") return false;
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== "http:") return false;
+    if (u.hostname !== "localhost" && u.hostname !== "127.0.0.1") return false;
+    const port = u.port === "" ? 80 : Number(u.port);
+    return Number.isFinite(port) && port >= 3000 && port <= 3999;
+  } catch {
+    return false;
+  }
+}
 
 function parseOrigins() {
   return (process.env.CORS_ORIGIN || "")
@@ -68,6 +85,7 @@ export function buildCorsOptions() {
       if (!origin) return callback(null, true);
       if (!isProd && allowedOrigins.length === 0) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (!isProd && isLocalDevBrowserOrigin(origin)) return callback(null, true);
       if (isProd && allowVercelApp && isHttpsVercelAppOrigin(origin)) {
         return callback(null, true);
       }

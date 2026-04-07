@@ -30,7 +30,17 @@ docker compose --profile stack up -d --build
 - API: `http://localhost:4000` — set `JWT_SECRET` (and optionally `CORS_ORIGIN`, `API_NODE_ENV`) via env or `.env` next to compose.
 - Web: `http://localhost:3000` — override build arg `NEXT_PUBLIC_API_URL` if the browser must call a different API origin.
 
-For local dev you usually keep **only Postgres** in Docker and run `npm run dev` in `backend/` and `frontend/` separately.
+For local dev you usually keep **only Postgres** in Docker. Install deps once per package, then start both from the repo root:
+
+```bash
+(cd backend && npm install) && (cd frontend && npm install) && npm install && npm run dev
+```
+
+- **Root** `npm install` pulls `concurrently` + `cross-env` only; **backend** / **frontend** still use their own `node_modules`.
+- **`npm run dev`** first frees **4000** and **3000–3003** (stale `node` / old Next) via [`scripts/kill-dev-ports.cjs`](scripts/kill-dev-ports.cjs), then starts API on **:4000** and Next on **:3000** (frontend sets `WATCHPACK_POLLING=1` to reduce macOS file-watcher / `EMFILE` issues). Set **`SKIP_DEV_PORTS_KILL=1`** if another app legitimately uses those ports.
+- If Next still picks **3001+** (all lower ports busy), the API allows **`http://localhost:3000–3999`** in **development** CORS so login works.
+
+Or run `npm run dev` in `backend/` and `frontend/` separately. From root: `npm run dev:api` / `npm run dev:web` for one side only.
 
 ## Backend
 
@@ -170,7 +180,7 @@ Hobby or scaled-to-zero hosts can wake slowly; the first request may see **502 /
 - **Backend must be running** on the port in `NEXT_PUBLIC_API_URL` (usually `4000`). Check `GET http://localhost:4000/health` returns **`status`: `"ok"`** and **`database`: `"up"`** (HTTP 200).
 - **`frontend/.env.local`** must set `NEXT_PUBLIC_API_URL` (restart `npm run dev` after changing it).
 - **Postgres must be running** and `DATABASE_URL` correct, with `npm run migrate` applied. DB errors often show as “Something went wrong” from the API. The value must be a single URL (e.g. `DATABASE_URL=postgresql://...`), not `DATABASE_URL=DATABASE_URL=...`. Check `/health`: `database` should be `"up"`.
-- Use **`http://localhost:3000`** or **`http://127.0.0.1:3000`** consistently; CORS now allows both by default.
+- Use **`http://localhost:3000`** or **`http://127.0.0.1:3000`** when possible; in **development**, CORS allows **`http://localhost` / `127.0.0.1` on ports 3000–3999** so Next’s fallback ports (3001, 3002, …) still work.
 
 ## Roadmap
 
