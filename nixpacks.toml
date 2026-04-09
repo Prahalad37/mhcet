@@ -1,0 +1,14 @@
+# nixpacks.toml — Railway backend build configuration.
+# Vercel builds from frontend/ and never reads this file.
+#
+# Problem: Nixpacks uses the repo root as the build context and runs `npm ci`
+# against the root package.json (which only has concurrently/cross-env devDeps).
+# The backend's Express/dotenv/bcrypt/pg packages never get installed,
+# causing ERR_MODULE_NOT_FOUND at runtime.
+#
+# Fix: Install from backend/package.json so backend/node_modules is populated.
+# Node.js ESM resolver traverses upward from each file's location, so
+# `node backend/src/db/migrate.js` will correctly find dotenv in backend/node_modules.
+
+[phases.install]
+cmds = ["npm ci --prefix backend"]
