@@ -12,7 +12,11 @@ const migrationsDir = path.join(__dirname, "migrations");
 /** Single-app id for pg_advisory_lock (avoid collisions with other lock users on the same DB). */
 const MIGRATE_ADVISORY_LOCK_KEY = 0x505245504d; // "PREPM" in hex
 
-async function migrate() {
+/**
+ * Run all pending migrations. Does NOT close the pool — safe to call from
+ * within a long-running server process (index.js imports this).
+ */
+export async function runMigrations() {
   const client = await pool.connect();
   try {
     await client.query("SELECT pg_advisory_lock($1)", [MIGRATE_ADVISORY_LOCK_KEY]);
@@ -60,11 +64,25 @@ async function migrate() {
     }
   } finally {
     client.release();
+  }
+}
+
+/**
+ * Standalone entry point: run migrations then close the pool and exit.
+ * Used by: npm run migrate
+ */
+async function migrateAndExit() {
+  try {
+    await runMigrations();
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  } finally {
     await pool.end();
   }
 }
 
-migrate().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Only run as a script when invoked directly (not imported as a module)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  migrateAndExit();
+}
