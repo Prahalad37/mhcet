@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npm run start:prod",
+    "startCommand": "node backend/src/db/migrate.js && node backend/src/index.js",
     "healthcheckPath": "/health"
   }
 }
