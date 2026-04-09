@@ -106,7 +106,7 @@ export default function AttemptHistoryPage() {
             const pct = Math.round(((r.score ?? 0) / total) * 100);
             const href = inProgress
               ? `/tests/${r.testId}/take?attemptId=${r.attemptId}`
-              : `/attempts/${r.attemptId}/results`;
+              : `/results/${r.attemptId}`;
             return (
               <li key={r.attemptId}>
                 <Link

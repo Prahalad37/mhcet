@@ -7,6 +7,11 @@ import { getDashboard, type DashboardData } from "@/lib/dashboardApi";
 import { getToken } from "@/lib/auth";
 import { redirectToLogin } from "@/lib/authRedirect";
 import { useClientMounted } from "@/lib/useClientMounted";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import {
+  ScoreHistoryChart,
+  ScoreHistoryEmpty,
+} from "@/components/dashboard/ScoreHistoryChart";
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
 
@@ -81,6 +86,7 @@ function Skeleton() {
 export default function DashboardPage() {
   const router = useRouter();
   const mounted = useClientMounted();
+  const { user: currentUser } = useCurrentUser();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,14 +122,23 @@ export default function DashboardPage() {
 
   const { stats, recentAttempts, weakSubjects, inProgress, nextTest } = data;
   const isNewUser = stats.totalTests === 0 && stats.practiceAnswered === 0;
+  const tenantName = currentUser?.tenantName?.trim();
+  const welcomeTitle = tenantName
+    ? `Welcome to the ${tenantName} Mock Test Portal`
+    : isNewUser
+      ? "Welcome 👋"
+      : "Welcome back to PrepMaster";
 
   return (
     <div className="space-y-6 pb-8">
       {/* ── Greeting & resume banner ─────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
-            {isNewUser ? "Welcome 👋" : "Dashboard"}
+        <div className="min-w-0 max-w-full">
+          <h1
+            className="text-xl font-bold leading-snug text-zinc-900 dark:text-zinc-50"
+            title={welcomeTitle}
+          >
+            {welcomeTitle}
           </h1>
           {isNewUser && (
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -172,6 +187,13 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* ── Score history chart ───────────────────────────────── */}
+      {recentAttempts.length > 0 ? (
+        <ScoreHistoryChart attempts={recentAttempts} />
+      ) : (
+        <ScoreHistoryEmpty />
+      )}
+
       {/* ── Next test CTA ─────────────────────────────────────── */}
       {nextTest && (
         <div className="glass-card flex flex-wrap items-center justify-between gap-4 p-5">
@@ -208,7 +230,7 @@ export default function DashboardPage() {
             {recentAttempts.map((a) => (
               <li key={a.attemptId}>
                 <Link
-                  href={`/attempts/${a.attemptId}/results`}
+                  href={`/results/${a.attemptId}`}
                   className="glass-card flex items-center gap-4 p-4 !rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800"
                 >
                   {/* Score circle */}

@@ -32,6 +32,26 @@ function mapQuestionPublic(row) {
   };
 }
 
+/** Map A–D to option body text from a snapshot or question row. */
+function optionTextFromRow(row, letter) {
+  if (letter == null || letter === "") return null;
+  const L = String(letter).trim().toUpperCase();
+  const map = {
+    A: row.option_a,
+    B: row.option_b,
+    C: row.option_c,
+    D: row.option_d,
+  };
+  return map[L] ?? null;
+}
+
+const PASS_ACCURACY_THRESHOLD = 40;
+
+function roundAccuracyPct(correct, total) {
+  if (!total || total <= 0) return 0;
+  return Math.round((correct / total) * 10_000) / 100;
+}
+
 /** ISO deadline for attempt (server clock): started_at + duration from joined test. */
 function endsAtIsoFromRow(row) {
   if (row.ends_at instanceof Date) {
@@ -85,12 +105,13 @@ attemptsRouter.post("/", async (req, res, next) => {
     assertCanStartMockAttempt(planRow);
 
     const testRes = await pool.query(
-      `SELECT id, duration_seconds FROM tests WHERE id = $1 AND is_active = true`,
+      `SELECT id, duration_seconds, title, topic FROM tests WHERE id = $1 AND is_active = true`,
       [testId]
     );
     if (!testRes.rows[0]) {
       throw new HttpError(404, "Test not found");
     }
+    const testRow = testRes.rows[0];
 
     const qRes = await pool.query(
       `SELECT id, prompt, option_a, option_b, option_c, option_d, order_index
@@ -100,7 +121,7 @@ attemptsRouter.post("/", async (req, res, next) => {
     const questions = qRes.rows;
     const total = questions.length;
 
-    const dur = testRes.rows[0].duration_seconds;
+    const dur = testRow.duration_seconds;
     const ins = await pool.query(
       `INSERT INTO attempts (user_id, test_id, total_questions, status)
        VALUES ($1, $2, $3, 'in_progress')
@@ -112,6 +133,9 @@ attemptsRouter.post("/", async (req, res, next) => {
 
     res.status(201).json({
       attemptId: attempt.id,
+      testId: testRow.id,
+      testTitle: testRow.title,
+      testTopic: testRow.topic,
       startedAt: attempt.started_at,
       endsAt: endsAtIsoFromRow(attempt),
       durationSeconds: dur,
@@ -281,7 +305,7 @@ attemptsRouter.get("/:attemptId/resume", async (req, res, next) => {
 
     const att = await pool.query(
       `SELECT a.id, a.test_id, a.started_at, a.status,
-              t.duration_seconds,
+              t.duration_seconds, t.title AS test_title, t.topic AS test_topic,
               (a.started_at + (t.duration_seconds * interval '1 second')) AS ends_at
        FROM attempts a
        JOIN tests t ON t.id = a.test_id
@@ -317,6 +341,8 @@ attemptsRouter.get("/:attemptId/resume", async (req, res, next) => {
     res.json({
       attemptId: row.id,
       testId: row.test_id,
+      testTitle: row.test_title,
+      testTopic: row.test_topic,
       startedAt: row.started_at,
       endsAt: endsAtIsoFromRow(row),
       durationSeconds: row.duration_seconds,
@@ -382,6 +408,113 @@ attemptsRouter.get("/:attemptId/results", async (req, res, next) => {
         hint: r.hint,
         officialExplanation: r.official_explanation,
       })),
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
+ * Phase 9 — post-exam analytics: aggregates + per-question breakdown for charts / report UI.
+ * Owner or admin only. Submitted attempts only.
+ */
+attemptsRouter.get("/:attemptId/result", async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const isAdmin = req.userRole === "admin";
+    const attemptId = req.params.attemptId;
+
+    const att = await pool.query(
+      `SELECT a.id, a.test_id, a.user_id, a.score, a.total_questions, a.status,
+              a.started_at, a.submitted_at,
+              t.title AS test_title, t.duration_seconds
+       FROM attempts a
+       JOIN tests t ON t.id = a.test_id
+       WHERE a.id = $1::uuid AND (a.user_id = $2::uuid OR $3 = true)`,
+      [attemptId, userId, isAdmin]
+    );
+    const attempt = att.rows[0];
+    if (!attempt) {
+      throw new HttpError(404, "Attempt not found");
+    }
+    if (attempt.status !== "submitted") {
+      throw new HttpError(400, "Results available after submission");
+    }
+
+    const detail = await pool.query(
+      `SELECT s.question_id AS id, s.prompt, s.option_a, s.option_b, s.option_c, s.option_d,
+              s.correct_option, s.order_index, s.official_explanation,
+              ans.selected_option, ans.is_correct
+       FROM attempt_question_snapshots s
+       LEFT JOIN answers ans ON ans.question_id = s.question_id AND ans.attempt_id = $1
+       WHERE s.attempt_id = $1
+       ORDER BY s.order_index ASC, s.question_id ASC`,
+      [attemptId]
+    );
+
+    const rows = detail.rows;
+    const totalQuestions = rows.length;
+    let correctAnswers = 0;
+    let attempted = 0;
+    let incorrectAnswers = 0;
+
+    for (const r of rows) {
+      const hasSelection = r.selected_option != null && String(r.selected_option).trim() !== "";
+      if (hasSelection) {
+        attempted += 1;
+        if (r.is_correct === true) {
+          correctAnswers += 1;
+        } else {
+          incorrectAnswers += 1;
+        }
+      }
+    }
+
+    const unattempted = totalQuestions - attempted;
+    const accuracy = roundAccuracyPct(correctAnswers, totalQuestions);
+    const passStatus = totalQuestions > 0 && accuracy >= PASS_ACCURACY_THRESHOLD;
+
+    let timeTakenSeconds = 0;
+    if (attempt.started_at && attempt.submitted_at) {
+      const ms =
+        new Date(attempt.submitted_at).getTime() - new Date(attempt.started_at).getTime();
+      timeTakenSeconds = Math.max(0, Math.floor(ms / 1000));
+    }
+
+    const score =
+      typeof attempt.score === "number" && Number.isFinite(attempt.score)
+        ? attempt.score
+        : correctAnswers;
+
+    const responses = rows.map((r) => ({
+      questionId: r.id,
+      orderIndex: r.order_index,
+      prompt: r.prompt,
+      selectedOption: r.selected_option,
+      selectedOptionText: optionTextFromRow(r, r.selected_option),
+      correctOption: r.correct_option,
+      correctOptionText: optionTextFromRow(r, r.correct_option),
+      isCorrect: r.is_correct === true,
+      explanation: r.official_explanation ?? null,
+    }));
+
+    res.json({
+      attemptId: attempt.id,
+      testId: attempt.test_id,
+      testTitle: attempt.test_title,
+      startedAt: attempt.started_at,
+      submittedAt: attempt.submitted_at,
+      durationSeconds: attempt.duration_seconds,
+      timeTakenSeconds,
+      totalQuestions,
+      attempted,
+      unattempted,
+      correctAnswers,
+      incorrectAnswers,
+      accuracy,
+      score,
+      passStatus,
+      responses,
     });
   } catch (e) {
     next(e);

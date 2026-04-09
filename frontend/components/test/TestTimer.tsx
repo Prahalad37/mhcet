@@ -46,16 +46,26 @@ export function TestTimer({ endsAtMs, onExpire }: Props) {
 
   return (
     <div
-      className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-mono font-medium ${
+      className={`inline-flex items-center gap-2.5 rounded-xl border px-4 py-2 shadow-sm transition-colors duration-200 ${
         urgent
-          ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-100"
-          : "border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+          ? "border-red-300/90 bg-red-50/95 dark:border-red-800/80 dark:bg-red-950/60"
+          : "border-zinc-200/80 bg-zinc-50/95 dark:border-zinc-700/80 dark:bg-zinc-900/90"
       }`}
     >
-      <span className="text-xs font-sans text-zinc-500 dark:text-zinc-400">
+      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
         Time left
       </span>
-      {format(remaining)}
+      <span
+        className={`font-mono text-lg font-bold tabular-nums tracking-tight ${
+          urgent
+            ? "text-red-700 dark:text-red-200"
+            : "text-zinc-900 dark:text-zinc-50"
+        }`}
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {format(remaining)}
+      </span>
     </div>
   );
 }

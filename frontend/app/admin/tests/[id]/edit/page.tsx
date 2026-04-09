@@ -3,15 +3,17 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getAdminTest, updateTest } from "@/lib/adminApi";
+import { getAdminTest, getTenants, updateTest } from "@/lib/adminApi";
 import { getUserErrorMessage } from "@/lib/errorMessages";
-import type { AdminTest } from "@/lib/types";
+import type { AdminTenant, AdminTest } from "@/lib/types";
 import { ADMIN_TOPIC_OPTIONS } from "@/lib/adminTopicOptions";
+import { toastErrorSafe, toastSuccessSafe } from "@/lib/sonnerToast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
 import { PageErrorState } from "@/components/ui/PageErrorState";
+import { TestTenantSelect } from "@/components/admin/TestTenantSelect";
 
 export default function EditTestPage() {
   const params = useParams<{ id: string }>();
@@ -23,12 +25,16 @@ export default function EditTestPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [tenants, setTenants] = useState<AdminTenant[]>([]);
+  const [tenantsLoading, setTenantsLoading] = useState(true);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     durationSeconds: 7200,
     topic: "",
     isActive: true,
+    tenantId: "" as string,
   });
 
   const topicSelectOptions = useMemo(() => {
@@ -41,9 +47,14 @@ export default function EditTestPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setTenantsLoading(true);
     setError(null);
     try {
-      const t = await getAdminTest(testId);
+      const [t, tenantData] = await Promise.all([
+        getAdminTest(testId),
+        getTenants().catch(() => [] as AdminTenant[]),
+      ]);
+      setTenants(tenantData);
       setTest(t);
       setFormData({
         title: t.title,
@@ -51,11 +62,13 @@ export default function EditTestPage() {
         durationSeconds: t.durationSeconds,
         topic: t.topic,
         isActive: t.isActive,
+        tenantId: t.tenantId ?? "",
       });
     } catch (e) {
       setError(getUserErrorMessage(e, { fallback: "Could not load test." }));
     } finally {
       setLoading(false);
+      setTenantsLoading(false);
     }
   }, [testId]);
 
@@ -69,15 +82,22 @@ export default function EditTestPage() {
     setSaving(true);
     setError(null);
     try {
+      const tenantPayload =
+        formData.tenantId === "" ? null : formData.tenantId;
       await updateTest(testId, {
         title: formData.title,
         description: formData.description || undefined,
         durationSeconds: formData.durationSeconds,
         topic: formData.topic,
         isActive: formData.isActive,
+        tenantId: tenantPayload,
       });
+      toastSuccessSafe("Test updated");
       router.push("/admin/tests");
     } catch (e) {
+      toastErrorSafe(
+        getUserErrorMessage(e, { fallback: "Could not save test." })
+      );
       setError(getUserErrorMessage(e, { fallback: "Could not save test." }));
     } finally {
       setSaving(false);
@@ -199,6 +219,17 @@ export default function EditTestPage() {
                 </select>
               </div>
             </div>
+
+            <TestTenantSelect
+              id="edit-page-test-tenant"
+              value={formData.tenantId}
+              onChange={(tenantId) =>
+                setFormData((prev) => ({ ...prev, tenantId }))
+              }
+              tenants={tenants}
+              loading={tenantsLoading}
+              disabled={saving}
+            />
 
             <div className="flex items-center gap-2">
               <input

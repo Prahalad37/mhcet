@@ -1,13 +1,25 @@
 import dotenv from "dotenv";
-import { pool } from "./pool.js";
-import { fullMockSets } from "./seedData/fullMocks.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const backendRoot = path.join(__dirname, "..", "..");
+
+dotenv.config({ path: path.join(backendRoot, ".env") });
+const railwayEnvPath = path.join(backendRoot, ".env.railway");
+if (fs.existsSync(railwayEnvPath)) {
+  dotenv.config({ path: railwayEnvPath, override: true });
+  console.log("Using backend/.env.railway (overrides DATABASE_URL from .env when set).\n");
+}
+
+const { pool } = await import("./pool.js");
+const { mhcetLaw5YearTests } = await import("./seedData/mhcetLaw5YearCourse.js");
 
 const reset = process.argv.includes("--reset");
 
-/** Five full-length mock tests (30 Q, 120 min each); content in seedData/fullMocks.js */
-const sampleTests = fullMockSets;
+/** Single MHCET Law (5-Year LLB) catalog mock; see seedData/mhcetLaw5YearCourse.js */
+const sampleTests = mhcetLaw5YearTests;
 
 async function seed() {
   const client = await pool.connect();

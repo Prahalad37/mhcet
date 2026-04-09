@@ -1,11 +1,11 @@
 # MHCET Law Mock Test
 
-Production-oriented mock exam app: **Next.js** frontend, **Express** API, **PostgreSQL**, **JWT** auth, timed MCQ attempts, scored results, and **OpenAI**-powered explanations (`POST /api/explain`).
+Production-oriented mock exam app: **Next.js** frontend, **Express** API, **PostgreSQL**, **JWT** auth, timed MCQ attempts, scored results, and **OpenAI**-powered explanations. Heavy work runs on **BullMQ** + **Redis** (`POST /api/explain` and admin CSV import return **202** + `jobId`; clients poll **`GET /api/jobs/:jobId`**).
 
 ## Prerequisites
 
 - Node.js 20+
-- Docker (optional, for PostgreSQL) or a hosted Postgres instance
+- Docker (optional, for PostgreSQL and/or **Redis**) or hosted Postgres + Redis
 
 ## Database
 
@@ -37,10 +37,10 @@ For local dev you usually keep **only Postgres** in Docker. Install deps once pe
 ```
 
 - **Root** `npm install` pulls `concurrently` + `cross-env` only; **backend** / **frontend** still use their own `node_modules`.
-- **`npm run dev`** first frees **4000** and **3000–3003** (stale `node` / old Next) via [`scripts/kill-dev-ports.cjs`](scripts/kill-dev-ports.cjs), then starts API on **:4000** and Next on **:3000**. Set **`SKIP_DEV_PORTS_KILL=1`** if another app legitimately uses those ports.
+- **`npm run dev`** first frees **4000** and **3000–3003** (stale `node` / old Next) via [`scripts/kill-dev-ports.cjs`](scripts/kill-dev-ports.cjs), then starts API on **:4000** and Next on **:3000** with **`next dev`** (webpack). [`frontend/next.config.mjs`](frontend/next.config.mjs) sets **`NEXT_WEBPACK_WATCH=1`** in the **`dev`** script so watch mode ignores **`.next`** (avoids rebuild loops with polling). Optional **Turbopack**: **`npm run dev:turbo --prefix frontend`** — faster, but can hit Turbopack manifest **`ENOENT`** errors if **`frontend/.next`** is deleted while dev is running; then stop Next, **`npm run clean:next`**, restart. Set **`SKIP_DEV_PORTS_KILL=1`** if another app legitimately uses those ports.
 - If you hit **`EMFILE` / “too many open files”** on macOS, use **`npm run dev:web:poll`** (or `WATCHPACK_POLLING=1` for the frontend only). [`frontend/next.config.mjs`](frontend/next.config.mjs) ignores **`.next`** in watch options so **polling mode** does not infinite-rebuild.
 - If Next still picks **3001+** (all lower ports busy), the API allows **`http://localhost:3000–3999`** in **development** CORS so login works.
-- If dev shows **`Unexpected end of JSON input`** in `loadManifest` / **`getNextFontManifest`**, or endless Fast Refresh / **`hot-update.json` 404**, stop all **`next dev`** processes, then run **`npm run dev:fresh`** (deletes **`frontend/.next`** and starts again) or manually: **`npm run clean:next`** then **`npm run dev`**. Keep a **single** Next dev server on a port.
+- If dev shows **`Unexpected end of JSON input`** in `loadManifest` / **`getNextFontManifest`**, or endless Fast Refresh / **`hot-update.json` 404**, **`Cannot find module './NNN.js'`** under **`frontend/.next/server`**, or Turbopack **`ENOENT`** on **`_buildManifest.js.tmp.*`** under **`frontend/.next/static/development`**, stop **all** **`next dev`** processes (only one should own **`frontend/.next`**), then run **`npm run dev:fresh`** (deletes **`frontend/.next`** and starts again) or manually: **`npm run clean:next`** then **`npm run dev`**. Keep a **single** Next dev server on a port.
 
 Or run `npm run dev` in `backend/` and `frontend/` separately. From root: `npm run dev:api` / `npm run dev:web` for one side only.
 
@@ -59,6 +59,14 @@ npm run dev
 ```
 
 API listens on `http://localhost:4000` (or `PORT`). Health check: `GET /health`.
+
+**Async jobs (AI explain + bulk CSV import)** need **Redis** and a **worker** process:
+
+1. Start Redis, e.g. `docker run -d --name redis -p 6379:6379 redis:7-alpine`
+2. Set **`REDIS_URL`** in `backend/.env` (see `backend/.env.example`), e.g. `redis://127.0.0.1:6379`
+3. In a **second** terminal: `cd backend && npm run worker`
+
+Without Redis + worker, `POST /api/explain` and admin CSV import return **503** with a clear error.
 
 ### Single admin only (delete all other users)
 
@@ -134,6 +142,7 @@ Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` to match the API origin.
 
 | App      | Variable              | Purpose                          |
 |----------|-----------------------|----------------------------------|
+| Backend  | `REDIS_URL`           | **Required** for BullMQ job queues (explain + CSV import), e.g. `redis://127.0.0.1:6379` |
 | Backend  | `DATABASE_URL`        | PostgreSQL connection string     |
 | Backend  | `JWT_SECRET`          | Sign JWT access tokens           |
 | Backend  | `JWT_EXPIRES_IN`      | Token lifetime (default `7d`)    |
@@ -153,6 +162,8 @@ Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` to match the API origin.
 | Backend  | `SKIP_DB_MIGRATE`     | Set to `true` only if you run `npm run migrate` **outside** the container (e.g. CI). **Railway + Dockerfile:** leave **unset** or `false` so [`docker-entrypoint.sh`](backend/docker-entrypoint.sh) runs migrations **after** `DATABASE_URL` is injected (pre-deploy hooks often lack DB env). |
 | Frontend | `NEXT_PUBLIC_API_URL` | API base URL (e.g. `http://localhost:4000`). **Build-time:** inlined at `next build`; must match production API; redeploy after changes. |
 | Frontend | `NEXT_PUBLIC_SITE_URL` | Canonical site URL for Open Graph / metadata (no trailing slash), e.g. `https://your-app.vercel.app`. Defaults to `http://localhost:3000` if unset. |
+| Frontend | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Optional **Google Analytics 4** id (`G-…`). Loaded only in **production** (`NODE_ENV`). |
+| Frontend | `NEXT_PUBLIC_META_PIXEL_ID` | Optional **Meta Pixel** id. Loaded only in **production** when set. |
 
 ## Production API (Railway): migrations vs start
 
@@ -194,6 +205,7 @@ Hobby or scaled-to-zero hosts can wake slowly; the first request may see **502 /
 
 ## Troubleshooting registration / login
 
+- **500 / “Something went wrong” on sign up or login** — The browser only sees a generic message; the API logs the real cause. **First:** open **`GET https://<your-railway-api-host>/health`** (replace with your API origin). You want HTTP **200** and **`"database": "up"`**. If **`database`** is **`down`** or HTTP **503**, fix **Railway → API service → Variables:** `DATABASE_URL` must reference your Postgres (use **Reference** to the Postgres plugin variable, or the **internal** URL when the API runs on Railway). Set **`JWT_SECRET`** on the API service. Redeploy after changing variables. **Vercel:** `NEXT_PUBLIC_API_URL` must be the **full HTTPS API origin** (no trailing slash); rebuild/redeploy the frontend when it changes.
 - **Railway: pre-deploy / migrate fails with `DATABASE_URL is required`** — Remove **`preDeployCommand`** migrate from the host (this repo’s `railway.json` has none) and **unset `SKIP_DB_MIGRATE`** so migrations run in **docker-entrypoint** where `DATABASE_URL` exists. Delete any **`SKIP_DB_MIGRATE=true`** you added for the old pre-deploy flow.
 - **Production: “Unable to connect” on login** — Almost always **CORS** (browser console shows `Access-Control-Allow-Origin`). **Redeploy the Railway API** (latest code allows `https://*.vercel.app` by default in production). If it still fails, set **`CORS_ORIGIN=https://mhcet-coral.vercel.app`** (exact) on Railway, or **`CORS_ALLOW_VERCEL_APP=false`** only if you intentionally use a strict allow-list. `curl` to `/health` can still be **200** while the browser is blocked.
 - **Backend must be running** on the port in `NEXT_PUBLIC_API_URL` (usually `4000`). Check `GET http://localhost:4000/health` returns **`status`: `"ok"`** and **`database`: `"up"`** (HTTP 200).
@@ -215,11 +227,12 @@ Product phases, implemented features, and maintainer checklist: **[docs/ROADMAP.
 - `GET /api/attempts` — attempts for current user (`in_progress` first, then `submitted`, newest first)  
 - `GET /api/attempts/:id/resume` — resume payload for an `in_progress` attempt (requires `testId` match on take page)  
 - `POST /api/attempts` — start attempt for `testId` (**403** `Limit reached` when free tier has hit `FREE_TESTS_PER_DAY` for the UTC day)  
-- `GET /api/config` — `{ explainAvailable, plan, testsTodayUtc, freeTestsPerDay, canStartMock, … }`  
+- `GET /api/config` — `{ explainAvailable, aiProvider, plan, testsTodayUtc, freeTestsPerDay, canStartMock, … }`  
 - `PATCH /api/attempts/:id/answers` — autosave selection  
 - `POST /api/attempts/:id/submit` — grade and finalize  
 - `GET /api/attempts/:id/results` — score + per-question review  
-- `POST /api/explain` — `{ attemptId, questionId, question, options: {A,B,C,D}, correctAnswer }` (optional fields validated against DB when sent) — returns `{ answer, explanation, concept, example }`. Responses are **cached in Postgres** by question content hash + model; **per-user quota** applies only when OpenAI is called. **IP burst** limit ~25/min on this route.
+- `POST /api/explain` — enqueue only: **202** `{ jobId, statusUrl }` — then **`GET /api/jobs/:jobId`** until `status: "completed"` (result includes `{ answer, explanation, concept, example }`) or `failed`. Body: `{ attemptId, questionId, … }` (optional fields validated against DB when sent). **Cached in Postgres** by question content hash + model; **per-user quota** applies only when OpenAI is called. **IP burst** limit ~25/min on enqueue.
+- `GET /api/jobs/:jobId` — job status + `result` / `error` (auth; job must belong to the current user)
 
 ### AI explanations (production behavior)
 

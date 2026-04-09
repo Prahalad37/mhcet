@@ -127,7 +127,8 @@ export default function TestsPage() {
           Available Tests
         </h1>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Each attempt is timed. Submit to see detailed results and topic insights.
+          You’ll open brief instructions first; the timer starts only after you pick
+          a mode. Submit when done for scored results and topic insights.
         </p>
         {appConfig?.plan === "free" ? (
           <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
@@ -211,7 +212,7 @@ export default function TestsPage() {
                     href={`/tests/${t.id}/take`}
                     className="btn-primary mt-4 w-full !justify-center !py-2"
                   >
-                    Start test →
+                    Instructions &amp; start →
                   </Link>
                 ) : (
                   <span className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-400 dark:bg-zinc-800">
@@ -286,14 +287,14 @@ export default function TestsPage() {
                         href={`/tests/${t.id}/take`}
                         className="btn-primary w-full !justify-center !py-2.5 sm:w-auto"
                       >
-                        Start test →
+                        Instructions &amp; start →
                       </Link>
                     ) : (
                       <span
                         className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-zinc-100 px-4 py-2.5 text-sm font-medium text-zinc-400 dark:bg-zinc-800 sm:w-auto"
                         title="Daily mock limit reached"
                       >
-                        Start test
+                        Instructions &amp; start
                       </span>
                     )}
                   </div>

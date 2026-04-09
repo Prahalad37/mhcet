@@ -8,3 +8,9 @@ export function toastErrorSafe(message: string) {
   const text = message.trim() || "Server unavailable";
   void import("sonner").then(({ toast }) => toast.error(text));
 }
+
+export function toastSuccessSafe(message: string) {
+  if (typeof window === "undefined") return;
+  const text = message.trim() || "Done";
+  void import("sonner").then(({ toast }) => toast.success(text));
+}

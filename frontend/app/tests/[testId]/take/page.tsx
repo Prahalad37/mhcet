@@ -15,13 +15,14 @@ import { getToken } from "@/lib/auth";
 import { redirectToLogin } from "@/lib/authRedirect";
 import { getUserErrorMessage } from "@/lib/errorMessages";
 import { useClientMounted } from "@/lib/useClientMounted";
-import type { AttemptResume, AttemptStart } from "@/lib/types";
+import type { AttemptResume, AttemptStart, TestDetail } from "@/lib/types";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
 import { Spinner } from "@/components/ui/Spinner";
 import { TestTimer } from "@/components/test/TestTimer";
 import { OptionButton } from "@/components/test/OptionButton";
+import { PreExamGate } from "@/components/test/PreExamGate";
 import { QuestionPalette } from "@/components/test/QuestionPalette";
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
@@ -59,6 +60,9 @@ function TakeTestInner() {
   );
   const [tabLeaveWarning, setTabLeaveWarning] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [testPreview, setTestPreview] = useState<TestDetail | null>(null);
+  const [startingExam, setStartingExam] = useState(false);
+  const [examFocusMode, setExamFocusMode] = useState(false);
 
   const submitLockRef = useRef(false);
   const submitSucceededRef = useRef(false);
@@ -106,6 +110,9 @@ function TakeTestInner() {
           }
           setAttempt({
             attemptId: data.attemptId,
+            testId: data.testId,
+            testTitle: data.testTitle,
+            testTopic: data.testTopic,
             startedAt: data.startedAt,
             endsAt: data.endsAt,
             durationSeconds: data.durationSeconds,
@@ -120,17 +127,9 @@ function TakeTestInner() {
           setVisited(initialVisited);
           testStartedAtMs.current = Date.now();
         } else {
-          const started = await api<AttemptStart>("/api/attempts", {
-            method: "POST",
-            body: JSON.stringify({ testId }),
-            ...noErrorToast,
-          });
-          if (!cancelled) {
-            setSelections({});
-            setAttempt(started);
-            setVisited(new Set<number>([0]));
-            testStartedAtMs.current = Date.now();
-          }
+          const detail = await api<TestDetail>(`/api/tests/${testId}`, noErrorToast);
+          if (cancelled) return;
+          setTestPreview(detail);
         }
       } catch (e) {
         if (!cancelled) {
@@ -139,7 +138,11 @@ function TakeTestInner() {
             return;
           }
           setError(
-            getUserErrorMessage(e, { fallback: "Could not load this attempt." })
+            getUserErrorMessage(e, {
+              fallback: resumeAttemptId
+                ? "Could not load this attempt."
+                : "Could not load this test.",
+            })
           );
         }
       } finally {
@@ -243,7 +246,7 @@ function TakeTestInner() {
         ...noErrorToast,
       });
       submitSucceededRef.current = true;
-      router.push(`/attempts/${attempt.attemptId}/results`);
+      router.push(`/results/${attempt.attemptId}`);
       router.refresh();
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
@@ -400,8 +403,57 @@ function TakeTestInner() {
       >
         <Spinner />
         <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          {resumeAttemptId ? "Loading your attempt…" : "Starting your test…"}
+          {resumeAttemptId ? "Loading your attempt…" : "Loading test information…"}
         </p>
+      </div>
+    );
+  }
+
+  if (testPreview && !attempt && !resumeAttemptId) {
+    return (
+      <div className="space-y-4">
+        {error ? <Alert message={error} /> : null}
+        <PreExamGate
+          test={testPreview}
+          onBack={() => router.push("/tests")}
+          starting={startingExam}
+          onStart={async (focusMode) => {
+            setError(null);
+            setStartingExam(true);
+            try {
+              if (focusMode) {
+                await document.documentElement.requestFullscreen().catch(() => {});
+              }
+              setExamFocusMode(focusMode);
+              const started = await api<AttemptStart>("/api/attempts", {
+                method: "POST",
+                body: JSON.stringify({ testId }),
+                ...noErrorToast,
+              });
+              setAttempt(started);
+              setTestPreview(null);
+              setSelections({});
+              setVisited(new Set<number>([0]));
+              setCurrentIndex(0);
+              setMarkedForReview(new Set());
+              setTabLeaveWarning(false);
+              testStartedAtMs.current = Date.now();
+            } catch (e) {
+              if (e instanceof ApiError && e.status === 401) {
+                redirectToLogin(router, { next: nextPath });
+                return;
+              }
+              setError(
+                getUserErrorMessage(e, {
+                  fallback: "Could not start this attempt.",
+                })
+              );
+              throw e;
+            } finally {
+              setStartingExam(false);
+            }
+          }}
+        />
       </div>
     );
   }
@@ -444,134 +496,163 @@ function TakeTestInner() {
   const isMarked = markedForReview.has(safeIndex);
 
   return (
-    <form onSubmit={onSubmitForm} className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-            Mock test
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {resumeAttemptId
-              ? "Resuming your saved attempt. Timer uses the original start time."
-              : "Palette matches exam style: answered, marked for review, and current question. Use ← → keys to move; M marks for review."}
-          </p>
+    <form
+      onSubmit={onSubmitForm}
+      className="flex min-h-[calc(100dvh-5.5rem)] flex-col gap-0 pb-[env(safe-area-inset-bottom,0px)]"
+    >
+      {/* Sticky exam header — below global nav (~3.5rem) */}
+      <header className="sticky top-14 z-40 -mx-4 border-b border-zinc-200/80 bg-white/85 px-4 py-3 shadow-sm backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/85 sm:top-16">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              {attempt.testTitle ?? "Mock test"}
+            </h1>
+            <p className="mt-1 text-sm leading-snug text-zinc-600 dark:text-zinc-400">
+              {resumeAttemptId
+                ? "Resuming your saved attempt. Timer uses the original start time."
+                : attempt.testTopic
+                  ? `${attempt.testTopic} · ← → navigate · M = mark for review`
+                  : "← → to move · M marks for review"}
+            </p>
+          </div>
+          <div className="shrink-0 sm:pt-0.5">
+            <TestTimer endsAtMs={endsAtMs} onExpire={onExpire} />
+          </div>
         </div>
-        <TestTimer endsAtMs={endsAtMs} onExpire={onExpire} />
-      </div>
+      </header>
 
-      {tabLeaveWarning ? (
-        <div
-          className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 dark:border-amber-800/70 dark:bg-amber-950/40 dark:text-amber-100"
-          role="status"
-        >
-          You left the test tab. Stay focused—repeated switching may be treated
-          as suspicious in proctored exams.
-        </div>
-      ) : null}
-
-      {isOffline ? (
-        <div
-          className="rounded-xl border border-rose-200/90 bg-rose-50/95 px-4 py-3 text-sm text-rose-950 dark:border-rose-800/70 dark:bg-rose-950/40 dark:text-rose-100 flex items-center justify-between"
-          role="status"
-        >
-          <span>You are offline. Your answers are being saved locally and will sync when reconnected.</span>
-          <Spinner />
-        </div>
-      ) : null}
-
-      {error ? <Alert message={error} /> : null}
-
-      <QuestionPalette
-        total={questionCount}
-        currentIndex={safeIndex}
-        visited={visited}
-        answered={answeredIndices}
-        markedForReview={markedForReview}
-        disabled={navBusy}
-        onSelect={goTo}
-      />
-
-      <div
-        className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
-        key={q.id}
-      >
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 mb-2">
-          Question {safeIndex + 1} of {questionCount}
-        </p>
-        <MarkdownRenderer content={q.prompt} />
-        <div className="mt-4 space-y-2">
-          <OptionButton
-            label="A"
-            text={q.optionA}
-            selected={selections[q.id] === "A"}
-            disabled={optionsBusy}
-            onSelect={() => patchAnswer(q.id, "A")}
-          />
-          <OptionButton
-            label="B"
-            text={q.optionB}
-            selected={selections[q.id] === "B"}
-            disabled={optionsBusy}
-            onSelect={() => patchAnswer(q.id, "B")}
-          />
-          <OptionButton
-            label="C"
-            text={q.optionC}
-            selected={selections[q.id] === "C"}
-            disabled={optionsBusy}
-            onSelect={() => patchAnswer(q.id, "C")}
-          />
-          <OptionButton
-            label="D"
-            text={q.optionD}
-            selected={selections[q.id] === "D"}
-            disabled={optionsBusy}
-            onSelect={() => patchAnswer(q.id, "D")}
-          />
-        </div>
-        {savingAnswer === q.id ? (
-          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-            Syncing answer…
-          </p>
+      <div className="flex flex-1 flex-col gap-4 pt-4">
+        {tabLeaveWarning ? (
+          <div
+            className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 dark:border-amber-800/70 dark:bg-amber-950/40 dark:text-amber-100"
+            role="status"
+          >
+            {examFocusMode
+              ? "You left the test tab during Focus mode. Return to this tab and stay here until you submit."
+              : "You left the test tab. Stay focused—repeated switching may be treated as suspicious in proctored exams."}
+          </div>
         ) : null}
+
+        {isOffline ? (
+          <div
+            className="flex items-center justify-between rounded-xl border border-rose-200/90 bg-rose-50/95 px-4 py-3 text-sm text-rose-950 dark:border-rose-800/70 dark:bg-rose-950/40 dark:text-rose-100"
+            role="status"
+          >
+            <span>
+              You are offline. Answers are saved locally and sync when reconnected.
+            </span>
+            <Spinner />
+          </div>
+        ) : null}
+
+        {error ? <Alert message={error} /> : null}
+
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(260px,300px)_minmax(0,1fr)] lg:items-start lg:gap-8">
+          <aside className="order-1 w-full lg:sticky lg:top-[5.75rem] lg:self-start">
+            <QuestionPalette
+              total={questionCount}
+              currentIndex={safeIndex}
+              visited={visited}
+              answered={answeredIndices}
+              markedForReview={markedForReview}
+              disabled={navBusy}
+              onSelect={goTo}
+            />
+          </aside>
+
+          <div className="order-2 min-w-0" key={q.id}>
+            <div className="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-in-out dark:border-zinc-800/80 dark:bg-zinc-950 dark:shadow-md">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Question {safeIndex + 1} of {questionCount}
+              </p>
+              <div className="border-b border-zinc-100 pb-5 dark:border-zinc-800/80">
+                <MarkdownRenderer
+                  content={q.prompt}
+                  className="prose prose-lg max-w-none leading-relaxed text-zinc-800 dark:prose-invert dark:text-zinc-200"
+                />
+              </div>
+              <div className="mt-5 space-y-3">
+                <OptionButton
+                  label="A"
+                  text={q.optionA}
+                  selected={selections[q.id] === "A"}
+                  disabled={optionsBusy}
+                  onSelect={() => patchAnswer(q.id, "A")}
+                />
+                <OptionButton
+                  label="B"
+                  text={q.optionB}
+                  selected={selections[q.id] === "B"}
+                  disabled={optionsBusy}
+                  onSelect={() => patchAnswer(q.id, "B")}
+                />
+                <OptionButton
+                  label="C"
+                  text={q.optionC}
+                  selected={selections[q.id] === "C"}
+                  disabled={optionsBusy}
+                  onSelect={() => patchAnswer(q.id, "C")}
+                />
+                <OptionButton
+                  label="D"
+                  text={q.optionD}
+                  selected={selections[q.id] === "D"}
+                  disabled={optionsBusy}
+                  onSelect={() => patchAnswer(q.id, "D")}
+                />
+              </div>
+              {savingAnswer === q.id ? (
+                <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+                  Syncing answer…
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-800 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
+      <div className="sticky bottom-0 z-40 -mx-4 mt-auto border-t border-zinc-200/80 bg-white/90 px-4 py-3 shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90 dark:shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.4)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={navBusy || safeIndex <= 0}
+              onClick={goPrev}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant={isMarked ? "primary" : "secondary"}
+              disabled={navBusy}
+              onClick={toggleMarkForReview}
+              aria-pressed={isMarked}
+              title="Keyboard: M"
+            >
+              {isMarked ? "Marked for review" : "Mark for review"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={navBusy || safeIndex >= lastIndex}
+              onClick={goNext}
+            >
+              {safeIndex >= lastIndex ? "Last question" : "Next"}
+            </Button>
+          </div>
           <Button
-            type="button"
-            variant="secondary"
-            disabled={navBusy || safeIndex <= 0}
-            onClick={goPrev}
-          >
-            Previous
-          </Button>
-          <Button
-            type="button"
-            variant={isMarked ? "primary" : "secondary"}
+            type="submit"
             disabled={navBusy}
-            onClick={toggleMarkForReview}
-            aria-pressed={isMarked}
-            title="Keyboard: M"
+            title="Finishes after any pending saves"
           >
-            {isMarked ? "Marked for review" : "Mark for review"}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={navBusy || safeIndex >= lastIndex}
-            onClick={goNext}
-          >
-            {safeIndex >= lastIndex ? "Last question" : "Next"}
+            {autoSubmitting
+              ? "Time up — submitting…"
+              : submitting
+                ? "Submitting…"
+                : "Submit test"}
           </Button>
         </div>
-        <Button type="submit" disabled={navBusy} title="Finishes after any pending saves">
-          {autoSubmitting
-            ? "Time up — submitting…"
-            : submitting
-              ? "Submitting…"
-              : "Submit test"}
-        </Button>
       </div>
     </form>
   );

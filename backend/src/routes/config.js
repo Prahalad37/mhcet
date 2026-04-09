@@ -16,11 +16,18 @@ configRouter.get("/", async (req, res, next) => {
     const cap = freeTestsPerDay();
     const canStartMock = plan === "paid" || testsTodayUtc < cap;
 
+    const explainDisabled =
+      process.env.EXPLAIN_AI_ENABLED === "false" || process.env.EXPLAIN_AI_ENABLED === "0";
+    const explainAvailable = !explainDisabled && !!process.env.REDIS_URL;
+    const aiProvider = (process.env.AI_PROVIDER || "mock").toLowerCase();
+
     res.json({
       plan,
       testsTodayUtc,
       freeTestsPerDay: cap,
       canStartMock,
+      explainAvailable,
+      aiProvider,
     });
   } catch (e) {
     next(e);

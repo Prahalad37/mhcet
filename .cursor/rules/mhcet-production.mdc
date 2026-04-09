@@ -36,7 +36,7 @@ These rules reduce common gaps when AI or humans edit this repo.
 
 ## AI explanations
 
-- Logic lives in `backend/src/services/explainService.js`: DB **cache**, per-user **daily quota** (`EXPLAIN_DAILY_LIMIT`, default 5 OpenAI-backed calls per UTC day), server-side **retries**. Do not expose the OpenAI key to the client or move completion calls into Next public bundles.
+- Logic lives in `backend/src/services/explainService.js` (run by **`npm run worker`** / BullMQ): DB **cache**, per-user **daily quota** (`EXPLAIN_DAILY_LIMIT`, default 5 OpenAI-backed calls per UTC day), server-side **retries**. `POST /api/explain` enqueues only (**202** + `jobId`); clients poll **`GET /api/jobs/:jobId`**. Do not expose the OpenAI key to the client or move completion calls into Next public bundles.
 
 ## Frontend
 

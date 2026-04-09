@@ -4,8 +4,10 @@ import multer from "multer";
 import { pool } from "../db/pool.js";
 import { adminOnly } from "../middleware/requireAdmin.js";
 import { HttpError } from "../utils/httpError.js";
-import { importQuestionsFromCSV, generateCSVTemplate } from "../services/importService.js";
-import { auditCreate, auditUpdate, auditDelete, auditImport, captureOldData } from "../middleware/auditLogger.js";
+import { logWarn } from "../utils/logger.js";
+import { generateCSVTemplate } from "../services/importService.js";
+import { getImportQueue } from "../jobs/queues.js";
+import { auditCreate, auditUpdate, auditDelete, captureOldData } from "../middleware/auditLogger.js";
 
 export const adminRouter = Router();
 
@@ -34,6 +36,8 @@ const createTestSchema = z.object({
   durationSeconds: z.number().int().min(60, "Duration must be at least 1 minute"),
   topic: z.string().min(1, "Topic is required").max(100),
   isActive: z.boolean().optional().default(true),
+  /** Omit → global/B2C (`tenant_id` null). UUID assigns to institute; `null` / `""` clears. */
+  tenantId: z.union([z.string().uuid(), z.null(), z.literal("")]).optional(),
 });
 
 const updateTestSchema = createTestSchema.partial();
@@ -61,6 +65,24 @@ const updateUserPlanSchema = z.object({
   plan: z.enum(["free", "paid"]),
 });
 
+/** Admin-only: assign platform user to a tenant (B2B). `tenantId` or `tenant_id`: UUID | null | "". */
+const updateAdminUserSchema = z
+  .object({
+    tenantId: z.union([z.string().uuid(), z.null(), z.literal("")]).optional(),
+    tenant_id: z.union([z.string().uuid(), z.null(), z.literal("")]).optional(),
+  })
+  .strict();
+
+const createTenantSchema = z.object({
+  name: z.string().min(1, "Name is required").max(255),
+  /** Omit or empty string → stored as NULL (platform-wide / no custom domain yet). */
+  domain: z.string().max(255).optional(),
+});
+
+const updateTenantStatusSchema = z.object({
+  status: z.enum(["active", "inactive"]),
+});
+
 // Helper functions
 function mapTestAdmin(row) {
   return {
@@ -72,7 +94,33 @@ function mapTestAdmin(row) {
     isActive: row.is_active,
     createdAt: row.created_at,
     questionCount: row.question_count || 0,
+    tenantId: row.tenant_id ?? null,
+    tenantName: row.tenant_name ?? null,
   };
+}
+
+async function assertTenantExists(tenantId) {
+  const t = await pool.query(`SELECT id FROM tenants WHERE id = $1`, [tenantId]);
+  if (t.rowCount === 0) {
+    throw new HttpError(400, "Unknown tenant");
+  }
+}
+
+/** Single test row for admin JSON: counts + `tenant_name` from `tenants`. */
+async function fetchTestAdminView(testId) {
+  const { rows } = await pool.query(
+    `SELECT t.*,
+            tn.name AS tenant_name,
+            COALESCE(qc.cnt, 0)::int AS question_count
+     FROM tests t
+     LEFT JOIN tenants tn ON tn.id = t.tenant_id
+     LEFT JOIN (
+       SELECT test_id, COUNT(*)::int AS cnt FROM questions GROUP BY test_id
+     ) qc ON qc.test_id = t.id
+     WHERE t.id = $1`,
+    [testId]
+  );
+  return rows[0] ?? null;
 }
 
 function mapQuestionAdmin(row) {
@@ -98,9 +146,43 @@ function mapUserAdmin(row) {
     email: row.email,
     role: row.role,
     plan: row.plan === "paid" ? "paid" : "free",
+    tenantId: row.tenant_id ?? null,
+    tenantName: row.tenant_name ?? null,
     createdAt: row.created_at,
     attemptCount: row.attempt_count || 0,
     lastLogin: row.last_login,
+  };
+}
+
+/** Single user row for admin JSON — includes tenant display name and attempt stats. */
+async function fetchUserAdminView(userId) {
+  const { rows } = await pool.query(
+    `SELECT u.*,
+            t.name AS tenant_name,
+            COALESCE(ac.attempt_count, 0)::int AS attempt_count,
+            ac.last_login
+     FROM users u
+     LEFT JOIN tenants t ON t.id = u.tenant_id
+     LEFT JOIN (
+       SELECT user_id, COUNT(*)::int AS attempt_count, MAX(started_at) AS last_login
+       FROM attempts
+       GROUP BY user_id
+     ) ac ON ac.user_id = u.id
+     WHERE u.id = $1`,
+    [userId]
+  );
+  return rows[0];
+}
+
+function mapTenantAdmin(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    domain: row.domain ?? null,
+    status: row.status,
+    userCount: row.user_count != null ? Number(row.user_count) : 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -129,6 +211,106 @@ adminRouter.get("/stats", async (req, res, next) => {
 });
 
 // ============================================================================
+// TENANTS (B2B coaching institutes)
+// ============================================================================
+
+adminRouter.get("/tenants", async (_req, res, next) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        t.id,
+        t.name,
+        t.domain,
+        t.status,
+        t.created_at,
+        t.updated_at,
+        COUNT(u.id)::int AS user_count
+      FROM tenants t
+      LEFT JOIN users u ON u.tenant_id = t.id
+      GROUP BY t.id
+      ORDER BY t.created_at DESC
+    `);
+    res.json(rows.map(mapTenantAdmin));
+  } catch (e) {
+    next(e);
+  }
+});
+
+adminRouter.post("/tenants", async (req, res, next) => {
+  try {
+    const { name, domain: rawDomain } = createTenantSchema.parse(req.body);
+    const domain =
+      rawDomain === undefined || rawDomain === null ? null : String(rawDomain).trim() || null;
+
+    let rows;
+    try {
+      const result = await pool.query(
+        `INSERT INTO tenants (name, domain)
+         VALUES ($1, $2)
+         RETURNING id, name, domain, status, created_at, updated_at`,
+        [name.trim(), domain]
+      );
+      rows = result.rows;
+    } catch (e) {
+      if (e && e.code === "23505") {
+        return next(new HttpError(409, "A tenant with this domain already exists"));
+      }
+      throw e;
+    }
+
+    const row = rows[0];
+    const withCount = { ...row, user_count: 0 };
+    res.status(201).json(mapTenantAdmin(withCount));
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return next(
+        new HttpError(400, "Validation failed", {
+          expose: true,
+          details: e.flatten().fieldErrors,
+        })
+      );
+    }
+    next(e);
+  }
+});
+
+adminRouter.put("/tenants/:id/status", async (req, res, next) => {
+  try {
+    const tenantId = req.params.id;
+    const { status } = updateTenantStatusSchema.parse(req.body);
+
+    const { rows } = await pool.query(
+      `UPDATE tenants
+       SET status = $1, updated_at = now()
+       WHERE id = $2
+       RETURNING id, name, domain, status, created_at, updated_at`,
+      [status, tenantId]
+    );
+
+    if (rows.length === 0) {
+      throw new HttpError(404, "Tenant not found");
+    }
+
+    const { rows: countRows } = await pool.query(
+      `SELECT COUNT(*)::int AS user_count FROM users WHERE tenant_id = $1`,
+      [tenantId]
+    );
+    const row = { ...rows[0], user_count: countRows[0]?.user_count ?? 0 };
+    res.json(mapTenantAdmin(row));
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return next(
+        new HttpError(400, "Validation failed", {
+          expose: true,
+          details: e.flatten().fieldErrors,
+        })
+      );
+    }
+    next(e);
+  }
+});
+
+// ============================================================================
 // TESTS MANAGEMENT
 // ============================================================================
 
@@ -136,14 +318,17 @@ adminRouter.get("/stats", async (req, res, next) => {
 adminRouter.get("/tests", async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
-      SELECT t.*, 
-             COUNT(q.id)::int as question_count
+      SELECT t.*,
+             tn.name AS tenant_name,
+             COALESCE(qc.cnt, 0)::int AS question_count
       FROM tests t
-      LEFT JOIN questions q ON q.test_id = t.id
-      GROUP BY t.id
+      LEFT JOIN tenants tn ON tn.id = t.tenant_id
+      LEFT JOIN (
+        SELECT test_id, COUNT(*)::int AS cnt FROM questions GROUP BY test_id
+      ) qc ON qc.test_id = t.id
       ORDER BY t.created_at DESC
     `);
-    
+
     res.json(rows.map(mapTestAdmin));
   } catch (e) {
     next(e);
@@ -154,22 +339,13 @@ adminRouter.get("/tests", async (req, res, next) => {
 adminRouter.get("/tests/:id", async (req, res, next) => {
   try {
     const testId = req.params.id;
-    const { rows } = await pool.query(`
-      SELECT t.*, 
-             COUNT(q.id)::int as question_count,
-             COUNT(a.id)::int as attempt_count
-      FROM tests t
-      LEFT JOIN questions q ON q.test_id = t.id
-      LEFT JOIN attempts a ON a.test_id = t.id
-      WHERE t.id = $1
-      GROUP BY t.id
-    `, [testId]);
-    
-    if (rows.length === 0) {
+    const row = await fetchTestAdminView(testId);
+
+    if (!row) {
       throw new HttpError(404, "Test not found");
     }
-    
-    res.json(mapTestAdmin(rows[0]));
+
+    res.json(mapTestAdmin(row));
   } catch (e) {
     next(e);
   }
@@ -179,14 +355,26 @@ adminRouter.get("/tests/:id", async (req, res, next) => {
 adminRouter.post("/tests", auditCreate('test'), async (req, res, next) => {
   try {
     const data = createTestSchema.parse(req.body);
-    
-    const { rows } = await pool.query(`
-      INSERT INTO tests (title, description, duration_seconds, topic, is_active)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
-    `, [data.title, data.description || null, data.durationSeconds, data.topic, data.isActive]);
-    
-    res.status(201).json(mapTestAdmin({ ...rows[0], question_count: 0 }));
+
+    let tenantIdVal = null;
+    if (data.tenantId !== undefined) {
+      if (data.tenantId !== null && data.tenantId !== "") {
+        await assertTenantExists(data.tenantId);
+        tenantIdVal = data.tenantId;
+      }
+    }
+
+    const { rows } = await pool.query(
+      `
+      INSERT INTO tests (title, description, duration_seconds, topic, is_active, tenant_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `,
+      [data.title, data.description || null, data.durationSeconds, data.topic, data.isActive, tenantIdVal]
+    );
+
+    const view = await fetchTestAdminView(rows[0].id);
+    res.status(201).json(mapTestAdmin(view));
   } catch (e) {
     next(e);
   }
@@ -213,8 +401,12 @@ adminRouter.put("/tests/:id", captureOldData('test'), auditUpdate('test'), async
     
     const attemptCount = existing.rows[0].attempt_count;
     if (attemptCount > 0 && (data.title || data.durationSeconds)) {
-      // Allow update but warn about data integrity
-      console.warn(`Admin ${req.userId} updating test ${testId} with ${attemptCount} submitted attempts`);
+      logWarn({
+        msg: "admin_update_test_with_submitted_attempts",
+        adminUserId: req.userId,
+        testId,
+        submittedAttemptCount: attemptCount,
+      });
     }
     
     // Build dynamic update query
@@ -242,20 +434,33 @@ adminRouter.put("/tests/:id", captureOldData('test'), auditUpdate('test'), async
       updates.push(`is_active = $${paramIndex++}`);
       values.push(data.isActive);
     }
-    
-    if (updates.length === 0) {
-      return res.json(mapTestAdmin(existing.rows[0]));
+    if (data.tenantId !== undefined) {
+      let nextTenantId = null;
+      if (data.tenantId !== null && data.tenantId !== "") {
+        await assertTenantExists(data.tenantId);
+        nextTenantId = data.tenantId;
+      }
+      updates.push(`tenant_id = $${paramIndex++}`);
+      values.push(nextTenantId);
     }
-    
+
+    if (updates.length === 0) {
+      const view = await fetchTestAdminView(testId);
+      return res.json(mapTestAdmin(view));
+    }
+
     values.push(testId);
-    const { rows } = await pool.query(`
-      UPDATE tests 
-      SET ${updates.join(', ')}
+    await pool.query(
+      `
+      UPDATE tests
+      SET ${updates.join(", ")}
       WHERE id = $${paramIndex}
-      RETURNING *
-    `, values);
-    
-    res.json(mapTestAdmin({ ...rows[0], question_count: existing.rows[0].question_count }));
+    `,
+      values
+    );
+
+    const view = await fetchTestAdminView(testId);
+    res.json(mapTestAdmin(view));
   } catch (e) {
     next(e);
   }
@@ -284,10 +489,11 @@ adminRouter.delete("/tests/:id", captureOldData('test'), auditDelete('test'), as
       if (rows.length === 0) {
         throw new HttpError(404, "Test not found");
       }
-      
-      res.json({ 
+
+      const view = await fetchTestAdminView(testId);
+      res.json({
         message: "Test deactivated (soft delete due to existing attempts)",
-        test: mapTestAdmin({ ...rows[0], question_count: 0 })
+        test: mapTestAdmin(view),
       });
     } else {
       // Hard delete - remove test and cascade to questions
@@ -319,8 +525,9 @@ adminRouter.post("/tests/:id/toggle", async (req, res, next) => {
     if (rows.length === 0) {
       throw new HttpError(404, "Test not found");
     }
-    
-    res.json(mapTestAdmin({ ...rows[0], question_count: 0 }));
+
+    const view = await fetchTestAdminView(testId);
+    res.json(mapTestAdmin(view));
   } catch (e) {
     next(e);
   }
@@ -431,7 +638,12 @@ adminRouter.put("/questions/:id", captureOldData('question'), auditUpdate('quest
     
     const answerCount = existing.rows[0].answer_count;
     if (answerCount > 0) {
-      console.warn(`Admin ${req.userId} updating question ${questionId} with ${answerCount} answers`);
+      logWarn({
+        msg: "admin_update_question_with_existing_answers",
+        adminUserId: req.userId,
+        questionId,
+        answerCount,
+      });
     }
     
     // Build dynamic update query
@@ -537,19 +749,24 @@ adminRouter.post("/questions/reorder", async (req, res, next) => {
 // USERS MANAGEMENT
 // ============================================================================
 
-// List users with stats
+// List users with stats + tenant display name
 adminRouter.get("/users", async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
-      SELECT u.*, 
-             COUNT(a.id)::int as attempt_count,
-             MAX(a.started_at) as last_login
+      SELECT u.*,
+             t.name AS tenant_name,
+             COALESCE(ac.attempt_count, 0)::int AS attempt_count,
+             ac.last_login
       FROM users u
-      LEFT JOIN attempts a ON a.user_id = u.id
-      GROUP BY u.id
+      LEFT JOIN tenants t ON t.id = u.tenant_id
+      LEFT JOIN (
+        SELECT user_id, COUNT(*)::int AS attempt_count, MAX(started_at) AS last_login
+        FROM attempts
+        GROUP BY user_id
+      ) ac ON ac.user_id = u.id
       ORDER BY u.created_at DESC
     `);
-    
+
     res.json(rows.map(mapUserAdmin));
   } catch (e) {
     next(e);
@@ -567,15 +784,17 @@ adminRouter.put("/users/:id/role", async (req, res, next) => {
       throw new HttpError(400, "Cannot change your own admin role");
     }
     
-    const { rows } = await pool.query(`
-      UPDATE users SET role = $1 WHERE id = $2 RETURNING *
-    `, [role, userId]);
-    
-    if (rows.length === 0) {
+    const { rowCount } = await pool.query(`UPDATE users SET role = $1 WHERE id = $2`, [
+      role,
+      userId,
+    ]);
+
+    if (rowCount === 0) {
       throw new HttpError(404, "User not found");
     }
-    
-    res.json(mapUserAdmin({ ...rows[0], attempt_count: 0 }));
+
+    const row = await fetchUserAdminView(userId);
+    res.json(mapUserAdmin(row));
   } catch (e) {
     next(e);
   }
@@ -587,16 +806,57 @@ adminRouter.put("/users/:id/plan", async (req, res, next) => {
     const userId = req.params.id;
     const { plan } = updateUserPlanSchema.parse(req.body);
 
-    const { rows } = await pool.query(
-      `UPDATE users SET plan = $1 WHERE id = $2 RETURNING *`,
-      [plan, userId]
-    );
+    const { rowCount } = await pool.query(`UPDATE users SET plan = $1 WHERE id = $2`, [
+      plan,
+      userId,
+    ]);
 
-    if (rows.length === 0) {
+    if (rowCount === 0) {
       throw new HttpError(404, "User not found");
     }
 
-    res.json(mapUserAdmin({ ...rows[0], attempt_count: 0 }));
+    const row = await fetchUserAdminView(userId);
+    res.json(mapUserAdmin(row));
+  } catch (e) {
+    next(e);
+  }
+});
+
+// Assign or clear tenant (B2B). tenantId: UUID | null | "" — empty string clears.
+adminRouter.put("/users/:id", async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const parsed = updateAdminUserSchema.parse(req.body);
+    const hasCamel = Object.prototype.hasOwnProperty.call(parsed, "tenantId");
+    const hasSnake = Object.prototype.hasOwnProperty.call(parsed, "tenant_id");
+    if (hasCamel && hasSnake) {
+      throw new HttpError(400, "Use either tenantId or tenant_id, not both");
+    }
+    if (!hasCamel && !hasSnake) {
+      throw new HttpError(400, "Provide tenantId or tenant_id (UUID, null, or empty string to clear)");
+    }
+    const raw = hasCamel ? parsed.tenantId : parsed.tenant_id;
+
+    let nextTenantId = null;
+    if (raw !== null && raw !== "") {
+      const t = await pool.query(`SELECT id FROM tenants WHERE id = $1`, [raw]);
+      if (t.rowCount === 0) {
+        throw new HttpError(400, "Unknown tenant");
+      }
+      nextTenantId = raw;
+    }
+
+    const { rowCount } = await pool.query(
+      `UPDATE users SET tenant_id = $1 WHERE id = $2`,
+      [nextTenantId, userId]
+    );
+
+    if (rowCount === 0) {
+      throw new HttpError(404, "User not found");
+    }
+
+    const row = await fetchUserAdminView(userId);
+    res.json(mapUserAdmin(row));
   } catch (e) {
     next(e);
   }
@@ -614,19 +874,41 @@ adminRouter.get("/import/template", (req, res) => {
   res.send(template);
 });
 
-// Import questions from CSV file
-adminRouter.post("/import/questions/:testId", upload.single('csvFile'), auditImport('question'), async (req, res, next) => {
+// Import questions from CSV file (async job — poll GET /api/jobs/:jobId)
+adminRouter.post("/import/questions/:testId", upload.single("csvFile"), async (req, res, next) => {
   try {
     const testId = req.params.testId;
-    
+
     if (!req.file) {
       throw new HttpError(400, "No CSV file uploaded");
     }
-    
-    const csvText = req.file.buffer.toString('utf-8');
-    const result = await importQuestionsFromCSV(testId, csvText, req.userId);
-    
-    res.status(201).json(result);
+
+    if (!process.env.REDIS_URL) {
+      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
+    }
+
+    const csvText = req.file.buffer.toString("utf-8");
+    let queue;
+    try {
+      queue = getImportQueue();
+    } catch {
+      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
+    }
+    const job = await queue.add(
+      "import",
+      { userId: req.userId, testId, csvText },
+      {
+        removeOnComplete: 200,
+        removeOnFail: 100,
+        attempts: 1,
+      }
+    );
+    const jobId = String(job.id);
+    res.status(202).json({
+      jobId,
+      status: "queued",
+      statusUrl: `/api/jobs/${jobId}`,
+    });
   } catch (e) {
     next(e);
   }
@@ -636,13 +918,37 @@ adminRouter.post("/import/questions/:testId", upload.single('csvFile'), auditImp
 adminRouter.post("/import/questions/:testId/text", async (req, res, next) => {
   try {
     const testId = req.params.testId;
-    const { csvText } = z.object({
-      csvText: z.string().min(1, "CSV text is required"),
-    }).parse(req.body);
-    
-    const result = await importQuestionsFromCSV(testId, csvText, req.userId);
-    
-    res.status(201).json(result);
+    const { csvText } = z
+      .object({
+        csvText: z.string().min(1, "CSV text is required"),
+      })
+      .parse(req.body);
+
+    if (!process.env.REDIS_URL) {
+      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
+    }
+
+    let queue;
+    try {
+      queue = getImportQueue();
+    } catch {
+      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
+    }
+    const job = await queue.add(
+      "import",
+      { userId: req.userId, testId, csvText },
+      {
+        removeOnComplete: 200,
+        removeOnFail: 100,
+        attempts: 1,
+      }
+    );
+    const jobId = String(job.id);
+    res.status(202).json({
+      jobId,
+      status: "queued",
+      statusUrl: `/api/jobs/${jobId}`,
+    });
   } catch (e) {
     next(e);
   }

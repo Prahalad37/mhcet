@@ -1,12 +1,6 @@
 import { ApiError } from "./api";
 
-type ErrorContext = "default";
-
-function messageForStatus(
-  status: number,
-  message: string,
-  context: ErrorContext
-): string {
+function messageForStatus(status: number, message: string): string {
   if (status === 0) {
     // Network errors - message should already be user-friendly from api.ts
     return message || "Network error. Check your connection and ensure the API server is running.";
@@ -47,11 +41,11 @@ function messageForStatus(
 
 export function getUserErrorMessage(
   error: unknown,
-  options: { fallback?: string; context?: ErrorContext } = {}
+  options: { fallback?: string } = {}
 ): string {
-  const { fallback = "Something went wrong.", context = "default" } = options;
+  const { fallback = "Something went wrong." } = options;
   if (error instanceof ApiError) {
-    return messageForStatus(error.status, error.message, context);
+    return messageForStatus(error.status, error.message);
   }
   if (error instanceof Error && error.message) {
     return error.message;

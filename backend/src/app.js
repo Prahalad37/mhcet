@@ -11,6 +11,8 @@ import { practiceRouter } from "./routes/practice.js";
 import { adminRouter } from "./routes/admin.js";
 import { auditRouter } from "./routes/audit.js";
 import { dashboardRouter } from "./routes/dashboard.js";
+import { explainRouter } from "./routes/explain.js";
+import { jobsRouter } from "./routes/jobs.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { pool } from "./db/pool.js";
 import { requestIdMiddleware } from "./middleware/requestId.js";
@@ -150,6 +152,8 @@ export function createApp() {
   app.use("/api/attempts", attemptsRouter);
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/config", configRouter);
+  app.use("/api/explain", explainRouter);
+  app.use("/api/jobs", jobsRouter);
   app.use("/api/practice", practiceRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/audit", auditRouter);

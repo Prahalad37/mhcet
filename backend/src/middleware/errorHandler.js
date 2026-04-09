@@ -2,6 +2,37 @@ import { ZodError } from "zod";
 import { HttpError } from "../utils/httpError.js";
 import { logError, logWarn } from "../utils/logger.js";
 
+/**
+ * Maps infra failures to 503 + a concrete message so deploy issues are visible in the UI
+ * (frontend shows `error` from JSON) instead of a generic 500.
+ */
+function classifyInfrastructureError(err) {
+  if (!err) return null;
+  if (err.message === "JWT_SECRET is required") {
+    return {
+      status: 503,
+      error: "Server misconfiguration: JWT_SECRET is not set on the API",
+    };
+  }
+  const c = err.code;
+  if (
+    c === "ECONNREFUSED" ||
+    c === "ENOTFOUND" ||
+    c === "ETIMEDOUT" ||
+    c === "EAI_AGAIN" ||
+    c === "57P03" ||
+    c === "28P01" ||
+    c === "3D000"
+  ) {
+    return {
+      status: 503,
+      error:
+        "Database unavailable — check DATABASE_URL on the API host and that Postgres is reachable",
+    };
+  }
+  return null;
+}
+
 export function errorHandler(err, req, res, _next) {
   const requestId = req.requestId;
 
@@ -35,6 +66,15 @@ export function errorHandler(err, req, res, _next) {
 
   if (err.code === "23505") {
     return res.status(409).json({ error: "Resource already exists" });
+  }
+
+  const infra = classifyInfrastructureError(err);
+  if (infra) {
+    logError(
+      { msg: "infrastructure_error", requestId, path: req.originalUrl, code: err.code },
+      err
+    );
+    return res.status(infra.status).json({ error: infra.error });
   }
 
   const status = err.statusCode || err.status || 500;

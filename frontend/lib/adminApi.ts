@@ -7,10 +7,12 @@ import type {
   AdminTest,
   AdminQuestion,
   AdminUser,
+  AdminTenant,
   AuditLog,
   AuditLogsResponse,
   ImportResult,
 } from "./types";
+import { pollJob } from "./jobPoll";
 
 const API_BASE = getApiBaseUrl();
 
@@ -40,6 +42,8 @@ export async function createTest(data: {
   durationSeconds: number;
   topic: string;
   isActive?: boolean;
+  /** Omit = global; `null` or `""` clears / platform catalog. */
+  tenantId?: string | null | "";
 }): Promise<AdminTest> {
   return api<AdminTest>("/api/admin/tests", {
     method: "POST",
@@ -54,6 +58,7 @@ export async function updateTest(id: string, data: Partial<{
   durationSeconds: number;
   topic: string;
   isActive: boolean;
+  tenantId: string | null | "";
 }>): Promise<AdminTest> {
   return api<AdminTest>(`/api/admin/tests/${id}`, {
     method: "PUT",
@@ -165,6 +170,48 @@ export async function updateUserPlan(id: string, plan: "free" | "paid"): Promise
   });
 }
 
+/** Assign or clear B2B tenant (`tenantId: null` = B2C / PrepMaster platform). */
+export async function updateUserTenant(
+  id: string,
+  tenantId: string | null
+): Promise<AdminUser> {
+  return api<AdminUser>(`/api/admin/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ tenantId }),
+    ...noErrorToast,
+  });
+}
+
+// ============================================================================
+// TENANTS (B2B institutes)
+// ============================================================================
+
+export async function getTenants(): Promise<AdminTenant[]> {
+  return api<AdminTenant[]>("/api/admin/tenants", noErrorToast);
+}
+
+export async function createTenant(data: {
+  name: string;
+  domain?: string;
+}): Promise<AdminTenant> {
+  return api<AdminTenant>("/api/admin/tenants", {
+    method: "POST",
+    body: JSON.stringify(data),
+    ...noErrorToast,
+  });
+}
+
+export async function updateTenantStatus(
+  id: string,
+  status: "active" | "inactive"
+): Promise<AdminTenant> {
+  return api<AdminTenant>(`/api/admin/tenants/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+    ...noErrorToast,
+  });
+}
+
 // ============================================================================
 // BULK IMPORT
 // ============================================================================
@@ -199,23 +246,43 @@ export async function importQuestionsCSV(testId: string, file: File): Promise<Im
   });
   
   const data = await response.json();
-  
+
+  if (response.status === 202 && data && typeof data.jobId === "string") {
+    return pollJob<ImportResult>(data.jobId);
+  }
+
   if (!response.ok) {
     const errMsg =
       typeof data?.error === "string" ? data.error : "Import failed";
     toastErrorSafe(errMsg);
     throw new Error(errMsg);
   }
-  
-  return data;
+
+  return data as ImportResult;
 }
 
 export async function importQuestionsText(testId: string, csvText: string): Promise<ImportResult> {
-  return api<ImportResult>(`/api/admin/import/questions/${testId}/text`, {
+  const base = getApiBaseUrl();
+  const token = getToken();
+  const response = await fetch(`${base}/api/admin/import/questions/${testId}/text`, {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token || ""}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ csvText }),
-    ...noErrorToast,
   });
+  const data = await response.json();
+  if (response.status === 202 && data && typeof data.jobId === "string") {
+    return pollJob<ImportResult>(data.jobId);
+  }
+  if (!response.ok) {
+    const errMsg =
+      typeof data?.error === "string" ? data.error : "Import failed";
+    toastErrorSafe(errMsg);
+    throw new Error(errMsg);
+  }
+  return data as ImportResult;
 }
 
 // ============================================================================

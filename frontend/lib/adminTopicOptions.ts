@@ -11,6 +11,7 @@ export const ADMIN_TOPIC_OPTIONS = [
   "English",
   "Mixed (UPSC Prelims)",
   "Mixed (MHCET 5-Year pattern)",
+  "MHCET Law (5-Year LLB)",
   "Constitutional Law",
   "Contract Law",
   "Criminal Law",

@@ -1,4 +1,7 @@
 /**
+ * Archived five-mock bank — not used by `seed.js` (see `mhcetLaw5YearCourse.js`).
+ * Kept for reference or Ad‑hoc reuse.
+ *
  * Five full-length-style PrepMaster Mock (5-Year LLB) practice mocks.
  * Pattern aligned with public syllabus summaries: Legal Aptitude, GK, Logical Reasoning,
  * Basic Math, English — scaled to 30 MCQs per set (8+6+8+2+6). Timed at 120 minutes.

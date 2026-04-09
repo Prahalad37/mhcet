@@ -61,6 +61,20 @@ function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
+/** Always returns a signal — never rely on `AbortSignal.timeout` alone (missing in some runtimes → infinite hang). */
+function createTimeoutSignal(ms: number): AbortSignal {
+  if (
+    typeof AbortSignal !== "undefined" &&
+    "timeout" in AbortSignal &&
+    typeof AbortSignal.timeout === "function"
+  ) {
+    return AbortSignal.timeout(ms);
+  }
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), ms);
+  return controller.signal;
+}
+
 function mergeSignals(
   callerSignal?: AbortSignal | null,
   timeoutSignal?: AbortSignal
@@ -95,17 +109,20 @@ function shouldRetryNetworkError(e: unknown): boolean {
 
 function throwNetworkFailure(e: unknown, options: FetchOptions): never {
   const errorMessage = e instanceof Error ? e.message.toLowerCase() : "";
+  const isAbort =
+    (e instanceof Error && e.name === "AbortError") ||
+    (typeof DOMException !== "undefined" && e instanceof DOMException && e.name === "AbortError");
 
-  if (errorMessage.includes("failed to fetch") || errorMessage.includes("network error")) {
+  if (isAbort || errorMessage.includes("timeout") || errorMessage.includes("aborted")) {
     const msg =
-      "Unable to connect to the server. Please check your internet connection and try again.";
+      "Request timed out. The API may be waking up — try again, or check NEXT_PUBLIC_API_URL matches your Railway API.";
     emitErrorToast(msg, options);
     throw new ApiError(0, msg, e);
   }
 
-  if (errorMessage.includes("timeout") || errorMessage.includes("aborted")) {
+  if (errorMessage.includes("failed to fetch") || errorMessage.includes("network error")) {
     const msg =
-      "Request timed out. Please check your connection and try again.";
+      "Unable to connect to the server. Please check your internet connection and try again.";
     emitErrorToast(msg, options);
     throw new ApiError(0, msg, e);
   }
@@ -142,10 +159,7 @@ export async function api<T>(path: string, options: FetchOptions = {}): Promise<
     }
 
     let res: Response;
-    const timeoutSignal =
-      typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
-        ? AbortSignal.timeout(FETCH_TIMEOUT_MS)
-        : undefined;
+    const timeoutSignal = createTimeoutSignal(FETCH_TIMEOUT_MS);
     const mergedSignal = mergeSignals(rest.signal, timeoutSignal);
 
     try {

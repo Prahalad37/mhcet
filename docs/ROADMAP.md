@@ -9,6 +9,27 @@
 
 | Date (UTC) | Change |
 |------------|--------|
+| 2026-04-09 | **Phase 10 — Cleanup (approved scope):** Removed unused **`StaticExplanationModal`**; **`admin`** route **`console.warn`** → **`logWarn`** (structured JSON); **`dev:webpack`** → alias of **`npm run dev`**. |
+| 2026-04-09 | **Phase 9 Step 2 — Exam analytics UI:** **`/results/[attemptId]`** (`app/(exam)/results/[attemptId]/page.tsx`) — **`GET /api/attempts/:id/result`**; hero (**Passed!** / **Needs improvement**), **`recharts`** donut (**emerald** / **rose** / **zinc**), **`glass-card`** metrics, question cards + **`<details>`** explanations; loading skeleton. **`/attempts/:id/results`** → **redirect** to **`/results/:id`**. Types: **`AttemptResultResponse`**. |
+| 2026-04-09 | **Phase 9 Step 1 — Result API:** **`GET /api/attempts/:id/result`** — submitted only; **owner or `admin`**; returns **`totalQuestions`**, **`attempted`**, **`unattempted`**, **`correctAnswers`**, **`incorrectAnswers`**, **`accuracy`** (% of total), **`score`**, **`passStatus`** (≥**40%** correct), **`timeTakenSeconds`**, **`responses`** (question text, selected vs correct option + text, **`explanation`** from snapshot). |
+| 2026-04-09 | **Phase 8 Step 3 — Dashboard analytics:** **`recharts`** on **`/dashboard`**: **`ScoreHistoryChart`** (indigo area gradient, subtle grid, glass tooltip) + **`ScoreHistoryEmpty`**; **`AdminStatCard`** (gradient shells, Lucide icons) on **`/admin`**; **`getTenants()`** for **active tenant** count (no new API). |
+| 2026-04-09 | **Phase 7 — B2B white-label (student):** **`GET /api/auth/me`** — `LEFT JOIN tenants`; **`user.tenantName`**. **`POST /api/auth/login`** returns **`tenantName`** (join). **`AuthUser`** + **`getCurrentUser`**, **`useCurrentUser`**. **`SiteNav`**: B2B shows **`GraduationCap`** + truncated tenant name; B2C **PrepMaster**. **`/dashboard`** welcome line uses tenant vs **PrepMaster**. |
+| 2026-04-09 | **Phase 6 Step 3 — Admin Tests UI:** **`AdminTest`** + **`createTest`/`updateTest`** accept **`tenantId`**. **`/admin/tests`** table + **Tenant** column (same chips as Users: B2C · PrepMaster vs B2B). **Create** / **Edit** modals + **`TestTenantSelect`** (`getTenants()`); **`/admin/tests/new`** and **`/admin/tests/[id]/edit`** include the same field. Toasts on create/update/delete/toggle. |
+| 2026-04-09 | **Phase 6 (backend) — Tenant-scoped tests:** **`GET /api/tests`** / **`GET /api/tests/:testId`** — platform catalog (`author_id IS NULL`) filtered by JWT **`tenantId`**: B2B `tests.tenant_id = tenant`, B2C `tenant_id IS NULL`; catalog tests not visible across tenant boundary (404 on detail). Own mocks (`author_id = sub`) still load on detail. **`GET /api/admin/tests`** joins **`tenants`** → **`tenantName`**; **`POST`/`PUT /api/admin/tests`** optional **`tenantId`** (FK-checked; `null` / `""` → global). |
+| 2026-04-09 | **Phase 5 — User ↔ tenant:** **`GET /api/admin/users`** uses **`LEFT JOIN tenants`** + subquery for stats; responses include **`tenantName`**. Role/plan/tenant **PUT** responses use **`fetchUserAdminView`**. Admin **Users** page: **Tenant** column (B2C badge vs org), **Edit** modal + **`updateUserTenant`**, toasts on plan/role/tenant. |
+| 2026-04-09 | **Phase 4 Step 2–3 — Tenants UI:** **`frontend/lib/adminApi`**: `getTenants`, `createTenant`, `updateTenantStatus`. **`AdminTenant`** type + **`toastSuccessSafe`**. **`/admin/tenants`**: table (id, name, domain, users, status, created), skeleton load, empty state, create modal, activate/deactivate. Admin nav link **Tenants**. Dependency: **`lucide-react`**. |
+| 2026-04-09 | **Phase 4 Step 1 — Tenant admin API:** **`GET /api/admin/tenants`** (list + **`userCount`**), **`POST /api/admin/tenants`** (`name`, optional `domain`), **`PUT /api/admin/tenants/:id/status`** (`active` \| `inactive`). Admin-only; duplicate domain → **409**. |
+| 2026-04-09 | **Phase 3.5 — Tenants in JWT:** `signToken` includes optional **`tenantId`** from DB; **`authMiddleware`** sets **`req.user`** `{ id, role, tenantId }` (B2C: `tenantId` null). Register/login responses include **`user.tenantId`**. **`PUT /api/admin/users/:id`** accepts **`tenantId`** or **`tenant_id`** (UUID \| null \| `""`) assigns/clears tenant (FK checked). Admin user list includes **`tenantId`**. |
+| 2026-04-09 | **Phase 2 — Growth:** Landing page at **`app/page.tsx`** (MHCET Law funnel: hero, features, trust, pricing). **`@next/third-parties`** **Google Analytics** + **Meta Pixel** via `ProductionAnalytics` in **`app/layout.tsx`** — scripts run only when **`NODE_ENV === production`** and **`NEXT_PUBLIC_GA_MEASUREMENT_ID` / `NEXT_PUBLIC_META_PIXEL_ID`** are set. Root **`metadata`** + home **`metadata`** (OG/Twitter/keywords). |
+| 2026-04-09 | **Phase 1 — Async jobs:** **`bullmq` + `ioredis`**; **`REDIS_URL`** + **`npm run worker`** (`backend/src/workers/`). **`POST /api/explain`** and **`POST /api/admin/import/questions/...`** return **202** + **`jobId`**; **`GET /api/jobs/:jobId`** for status. Results page **AI explanation** + admin import use **polling**. `GET /api/config` adds **`explainAvailable`** (requires Redis). Implemented **`explainService`**, **`mockExplainProvider`**, rate limit on explain enqueue. |
+| 2026-04-09 | **Dev / routing:** Home at **`app/page.tsx`** (was route-group **`app/(marketing)/page.tsx`**) so tooling resolves **`server/app/page`** consistently. **`next.config`**: custom **`webpack`** only when **`NEXT_WEBPACK_WATCH=1`** (set by **`npm run dev`**; **`dev:webpack`** aliases **`dev`**). **`transpilePackages`** includes **`recharts`**. |
+| 2026-04-09 | **Dev:** default frontend **`npm run dev`** uses **`next dev`** (webpack) + **`NEXT_WEBPACK_WATCH=1`**; optional **`dev:turbo`** for Turbopack. **`app/error.tsx`** + **`app/global-error.tsx`**. Root **`dev:web:poll`** uses the same **`dev`** script with **`WATCHPACK_POLLING=1`**. README updated. |
+| 2026-04-09 | **Dev:** README troubleshooting adds **`Cannot find module './NNN.js'`** (stale **`frontend/.next`**): stop all **`next dev`** processes, then **`npm run clean:next`** / **`npm run dev:fresh`**. |
+| 2026-04-09 | **Attempts API:** **`POST /api/attempts`** and **`GET /api/attempts/:id/resume`** return **`testId`**, **`testTitle`**, **`testTopic`** so the live exam header matches the catalog. **Tests hub** CTAs say **Instructions & start**; copy explains timer starts after mode. **Pre-exam** sticky bar (brand, title, duration, optional fullscreen) + integrity callout. |
+| 2026-04-09 | **Pre-exam gate (`/tests/[id]/take`):** instructions + section table + palette legend (ixamBee-style flow) before **`POST /api/attempts`**; modal **Normal** vs **Focus** mode (fullscreen prompt + stronger tab-leave copy; no camera). **`GET /api/tests/:testId`** includes **`subject`** on each question for the breakdown table. |
+| 2026-04-09 | **Seed:** default catalog is **one** mock — **MHCET Law (5-Year LLB)** (`seedData/mhcetLaw5YearCourse.js`): 30 dummy MCQs in syllabus-style sections, 120 min; **`npm run seed:reset`** clears all tests and re-inserts it. **`seed.js`** loads **`backend/.env.railway`** when present (same override rule as `reset-admin-users`). Admin topic option **`MHCET Law (5-Year LLB)`** added. |
+| 2026-04-08 | **Frontend `api()`:** fallback **fetch timeout** when `AbortSignal.timeout` is missing (avoids infinite “Creating account…”); **`AbortError`** mapped to a clear timed-out message. |
+| 2026-04-08 | **Auth 500 UX:** `errorHandler` maps common **DB connectivity** errors and **missing JWT_SECRET** to **503** with a concrete `error` message (UI can show it); README troubleshooting for register/login + `/health`. |
 | 2026-04-07 | **`reset-admin-users`:** optional **`backend/.env.railway`** (gitignored) loads after `.env` so a **public** prod `DATABASE_URL` can be used from a laptop; internal `*.railway.internal` URLs documented as Railway-only. [`backend/.env.railway.example`](backend/.env.railway.example) + README. |
 | 2026-04-07 | **`reset-admin-users`:** only **one** admin user (`SINGLE_ADMIN_EMAIL` / `SINGLE_ADMIN_PASSWORD` optional); deletes all other users. README + `.env.example`. |
 | 2026-04-07 | **Frontend:** **`AppToaster`** uses static **`sonner`** import + CSS (drops `next/dynamic` wrapper) to avoid dev **`options.factory` / `undefined.call`** webpack runtime errors with HMR. |
@@ -74,6 +95,8 @@
 - [x] **Phase 2 — Product polish** — Results: accuracy %, attempt summary, green/red review, inline static explanations. Take test: exam-style sticky palette, mark for review, keyboard navigation, non-blocking saves + flush-before-submit, memoized controls. Shared visible loading copy via `PageLoadingState`.
 - [x] **Deployment-ready UI (shell)** — Favicon route, canonical URL metadata, site footer, skip-to-content link, keyboard focus rings on primary nav/CTAs, PostCSS autoprefixer, admin page title consistency.
 - [x] **P0/P1 hardening** — immutable result snapshots at submit time, submitted-attempt-safe admin delete behavior, practice score dedupe, auth `next` redirect continuity, DB-backed admin role check, auth-specific rate limiter, explain quota reservation/release flow, and API abort fallback compatibility.
+- [x] **Phase 6 — Tenant-scoped catalog + admin UI** — Backend: student catalog/detail by JWT `tenantId`; admin tests API **`tenantName`** + **`tenantId`**. Frontend: **`/admin/tests`** table, create/edit modals + full-page forms, **`TestTenantSelect`** from **`getTenants()`**.
+- [x] **Phase 7 — B2B white-label** — **`GET /api/auth/me`** + login payload include **`tenantName`**; nav + dashboard copy for institute brand vs PrepMaster.
 
 ---
 
@@ -128,6 +151,8 @@
 
 | Method | Path | Notes |
 |--------|------|--------|
+| GET | `/api/auth/me` | Current user (JWT); **`user.tenantName`** from **`tenants`** (B2C: null) |
+| POST | `/api/auth/login` | **`user.tenantName`** when `users.tenant_id` set |
 | GET | `/api/attempts` | **History** — in_progress + submitted |
 | GET | `/api/attempts/:id/resume` | Resume; includes **`endsAt`** (deadline, ISO) |
 | GET | `/api/config` | `{ explainAvailable, plan, testsTodayUtc, freeTestsPerDay, canStartMock, aiProvider }` |
@@ -136,28 +161,35 @@
 | PATCH | `/api/attempts/:id/answers` | Save answer; **400** after **`endsAt`** |
 | POST | `/api/attempts/:id/submit` | Submit; **idempotent** (200 if already submitted) |
 | GET | `/api/attempts/:id/results` | Results detail; each question may include `hint`, `officialExplanation` (DB `official_explanation`) |
-| GET | `/api/tests` | List tests |
-| GET | `/api/tests/:testId` | Test + questions |
+| GET | `/api/attempts/:id/result` | **Phase 9 analytics:** aggregates (`accuracy`, `passStatus` ≥40% of total Qs correct, attempted/unattempted, etc.) + `responses[]` (prompt, chosen vs correct, `explanation`); **owner or admin** — UI: **`/results/:attemptId`** |
+| GET | `/api/tests` | List **platform catalog** (`author_id IS NULL`, active); **tenant-scoped** via JWT (`tenantId`): B2B = `tests.tenant_id`, B2C = `tenant_id IS NULL` |
+| GET | `/api/tests/:testId` | Test + questions; catalog rows same tenant rule; **own** mocks (`author_id = sub`) allowed |
 | GET | `/api/analytics/insights` | Weak topics + recommendations |
 | GET | `/api/practice/subjects` | Subject list + question counts |
 | POST | `/api/practice/start` | Start practice session (subject, count) |
 | POST | `/api/practice/:id/check` | Check answer, instant feedback |
 | POST | `/api/practice/:id/complete` | Complete session, get summary |
 | GET | `/api/admin/stats` | Admin dashboard statistics |
-| GET | `/api/admin/tests` | Admin: list all tests (including inactive) |
-| POST | `/api/admin/tests` | Admin: create test |
-| PUT | `/api/admin/tests/:id` | Admin: update test |
+| GET | `/api/admin/tenants` | List tenants + **`userCount`** per row |
+| POST | `/api/admin/tenants` | Create tenant `{ name, domain? }` — **201** |
+| PUT | `/api/admin/tenants/:id/status` | Set **`status`**: `active` \| `inactive` |
+| GET | `/api/admin/tests` | Admin: list all tests (including inactive); includes **`tenantId`**, **`tenantName`** |
+| POST | `/api/admin/tests` | Admin: create test; optional **`tenantId`** (UUID \| `null` \| `""`) |
+| PUT | `/api/admin/tests/:id` | Admin: update test; optional **`tenantId`** (UUID \| `null` \| `""`) |
 | DELETE | `/api/admin/tests/:id` | Admin: delete test (soft if submitted attempts exist; hard only when none) |
 | GET | `/api/admin/tests/:testId/questions` | Admin: list questions with answers |
 | POST | `/api/admin/tests/:testId/questions` | Admin: add question |
 | PUT | `/api/admin/questions/:id` | Admin: update question |
 | DELETE | `/api/admin/questions/:id` | Admin: delete question |
 | GET | `/api/admin/users` | Admin: list users with stats |
+| PUT | `/api/admin/users/:id` | Admin: set **`tenantId`** or **`tenant_id`** (UUID, **`null`**, or **`""`** to clear) — B2B assignment |
 | PUT | `/api/admin/users/:id/role` | Admin: change user role |
 | GET | `/api/admin/import/template` | Admin: download CSV template |
-| POST | `/api/admin/import/questions/:testId` | Admin: import questions from CSV |
+| POST | `/api/admin/import/questions/:testId` | Admin: enqueue CSV import — **202** + `jobId`; poll **`GET /api/jobs/:id`** |
+| POST | `/api/admin/import/questions/:testId/text` | Same (raw CSV text); **202** + poll |
+| GET | `/api/jobs/:jobId` | Job status + `result` / `error` (owner-only) |
 | GET | `/api/audit/logs` | Admin: audit logs with pagination |
-| POST | `/api/explain` | Optional AI |
+| POST | `/api/explain` | Enqueue AI explanation — **202** + `jobId`; poll **`GET /api/jobs/:id`** |
 
 ---
 

@@ -1,11 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
-/**
- * App Router error boundary — ensures Next never falls back to a missing `/_error` chunk
- * (which shows “missing required error components, refreshing…” in dev).
- */
 export default function Error({
   error,
   reset,
@@ -13,22 +7,18 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error("[app/error]", error);
-  }, [error]);
-
   return (
-    <div className="rounded-2xl border border-rose-200 bg-rose-50/90 p-8 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/40">
-      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-        Something went wrong
-      </h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        {error.message || "An unexpected error occurred."}
-      </p>
+    <div className="mx-auto max-w-lg rounded-2xl border border-red-200 bg-red-50/90 p-6 text-center dark:border-red-900/60 dark:bg-red-950/40">
+      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Something went wrong</h2>
+      {process.env.NODE_ENV === "development" && error?.message ? (
+        <p className="mt-2 break-words text-left font-mono text-xs text-red-800 dark:text-red-200">{error.message}</p>
+      ) : (
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Try again or refresh the page.</p>
+      )}
       <button
         type="button"
         onClick={() => reset()}
-        className="mt-6 inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-700"
+        className="btn-primary mt-6 px-5 py-2.5 text-sm"
       >
         Try again
       </button>

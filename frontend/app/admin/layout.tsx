@@ -12,6 +12,7 @@ const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
   { href: "/admin/tests", label: "Tests", icon: "📝" },
   { href: "/admin/import", label: "Import", icon: "📤" },
+  { href: "/admin/tenants", label: "Tenants", icon: "🏢" },
   { href: "/admin/users", label: "Users", icon: "👥" },
   { href: "/admin/audit", label: "Audit Logs", icon: "📋" },
 ];

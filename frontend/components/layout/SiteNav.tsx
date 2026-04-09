@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { GraduationCap } from "lucide-react";
 import { clearToken, getToken } from "@/lib/auth";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export function SiteNav() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export function SiteNav() {
   const [authed, setAuthed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user: currentUser } = useCurrentUser();
 
   useEffect(() => {
     const token = getToken();
@@ -49,6 +52,10 @@ export function SiteNav() {
         : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-100"
     }`;
 
+  const tenantName = currentUser?.tenantName?.trim();
+  const brandIsB2B = Boolean(tenantName);
+  const brandLabel = brandIsB2B ? tenantName : "PrepMaster";
+
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-all duration-300 ${
@@ -61,21 +68,28 @@ export function SiteNav() {
         {/* Logo */}
         <Link
           href={authed ? "/dashboard" : "/"}
-          className="flex items-center gap-2 rounded-lg outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+          className="flex min-w-0 max-w-[min(100%,20rem)] items-center gap-2 rounded-lg outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:max-w-none"
+          title={brandLabel}
         >
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 10L7 3L12 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M4.5 7.5H9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <span className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            PrepMaster
+          {brandIsB2B ? (
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-violet-700 shadow-sm">
+              <GraduationCap className="h-4 w-4 text-white" aria-hidden />
+            </div>
+          ) : (
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                <path d="M2 10L7 3L12 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4.5 7.5H9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+          )}
+          <span className="min-w-0 truncate text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {brandLabel}
           </span>
         </Link>
 
-        {/* Nav */}
-        <nav className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2" aria-label="Primary">
+        {/* Nav — hidden on mobile (BottomNav handles those screens) */}
+        <nav className="hidden md:flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2" aria-label="Primary">
           {authed ? (
             <>
               <Link href="/dashboard" className={navLink("/dashboard")}>Home</Link>

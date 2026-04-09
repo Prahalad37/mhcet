@@ -8,7 +8,7 @@ export function SiteFooter() {
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           © {year} PrepMaster — practice tests for exam preparation.
         </p>
-        <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+        <nav className="flex flex-wrap items-center gap-3 text-sm">
           <Link
             href="/tests"
             className="text-sky-700 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-sky-400"
@@ -17,13 +17,13 @@ export function SiteFooter() {
           </Link>
           <Link
             href="/login"
-            className="text-sky-700 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-sky-400"
+            className="btn-primary px-4 py-2.5 text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
           >
             Log in
           </Link>
           <Link
             href="/register"
-            className="text-sky-700 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-sky-400"
+            className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 shadow-sm transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-white/15 dark:bg-white/5 dark:text-zinc-100 dark:hover:bg-white/10"
           >
             Sign up
           </Link>

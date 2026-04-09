@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { api, ApiError, noErrorToast } from "@/lib/api";
 import { setToken } from "@/lib/auth";
 import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
 

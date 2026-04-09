@@ -15,6 +15,8 @@ export type QuestionPublic = {
   optionC: string;
   optionD: string;
   orderIndex: number;
+  /** Present when the API returns per-question subjects (e.g. GET /api/tests/:id for instructions). */
+  subject?: string | null;
 };
 
 export type TestDetail = {
@@ -47,6 +49,10 @@ export type AnalyticsInsights = {
 
 export type AttemptStart = {
   attemptId: string;
+  /** Present on new starts (POST) and resumes (GET) for in-app headers. */
+  testId?: string;
+  testTitle?: string | null;
+  testTopic?: string | null;
   startedAt: string;
   /** Server-authoritative deadline (ISO). Prefer this over startedAt + duration for the timer. */
   endsAt?: string;
@@ -67,6 +73,19 @@ export type AppConfig = {
   testsTodayUtc?: number;
   freeTestsPerDay?: number;
   canStartMock?: boolean;
+  /** False when AI is disabled or Redis/worker is not configured */
+  explainAvailable?: boolean;
+  aiProvider?: string;
+};
+
+/** POST /api/explain job result (GET /api/jobs/:id when completed) */
+export type AiExplainResult = {
+  answer: string;
+  explanation: string;
+  concept: string;
+  example: string;
+  cached?: boolean;
+  model?: string;
 };
 
 export type AttemptSubmit = {
@@ -107,6 +126,38 @@ export type ResultsResponse = {
   >;
 };
 
+/** GET /api/attempts/:id/result — Phase 9 analytics report */
+export type AttemptResultResponse = {
+  attemptId: string;
+  testId: string;
+  testTitle: string;
+  startedAt: string;
+  submittedAt: string;
+  durationSeconds: number;
+  timeTakenSeconds: number;
+  totalQuestions: number;
+  attempted: number;
+  unattempted: number;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  accuracy: number;
+  score: number;
+  passStatus: boolean;
+  responses: AttemptResultQuestion[];
+};
+
+export type AttemptResultQuestion = {
+  questionId: string;
+  orderIndex: number;
+  prompt: string;
+  selectedOption: string | null;
+  selectedOptionText: string | null;
+  correctOption: string;
+  correctOptionText: string | null;
+  isCorrect: boolean;
+  explanation: string | null;
+};
+
 /* ── Practice mode ────────────────────────────── */
 
 export type PracticeSubject = {
@@ -139,6 +190,16 @@ export type PracticeComplete = {
 };
 
 
+/** Logged-in user from `/api/auth/login`, `/api/auth/register`, `/api/auth/me`. */
+export type AuthUser = {
+  id: string;
+  email: string;
+  role: string;
+  tenantId?: string | null;
+  /** B2B coaching brand; null/undefined for B2C (PrepMaster platform). */
+  tenantName?: string | null;
+};
+
 /* ── Admin types ────────────────────────────── */
 
 export type AdminStats = {
@@ -161,6 +222,10 @@ export type AdminTest = {
   isActive: boolean;
   createdAt: string;
   questionCount: number;
+  /** B2B institute; null/undefined = global catalog (B2C). */
+  tenantId?: string | null;
+  /** From `GET /api/admin/tests` (joined `tenants.name`). */
+  tenantName?: string | null;
 };
 
 export type AdminQuestion = {
@@ -183,9 +248,22 @@ export type AdminUser = {
   email: string;
   role: 'user' | 'admin';
   plan: 'free' | 'paid';
+  tenantId?: string | null;
+  /** From `GET /api/admin/users` (joined tenants.name) */
+  tenantName?: string | null;
   createdAt: string;
   attemptCount: number;
   lastLogin: string | null;
+};
+
+export type AdminTenant = {
+  id: string;
+  name: string;
+  domain: string | null;
+  status: "active" | "inactive";
+  userCount: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type AuditLog = {

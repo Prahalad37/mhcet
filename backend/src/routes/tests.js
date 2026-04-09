@@ -6,7 +6,7 @@ export const testsRouter = Router();
 testsRouter.use(authMiddleware);
 
 function mapQuestionPublic(row) {
-  return {
+  const out = {
     id: row.id,
     prompt: row.prompt,
     optionA: row.option_a,
@@ -15,18 +15,42 @@ function mapQuestionPublic(row) {
     optionD: row.option_d,
     orderIndex: row.order_index,
   };
+  if (row.subject != null) {
+    out.subject = row.subject;
+  }
+  return out;
 }
 
-testsRouter.get("/", async (_req, res, next) => {
+testsRouter.get("/", async (req, res, next) => {
   try {
+    const isAdmin = req.userRole === "admin";
+    const tenantId = req.user?.tenantId ?? null;
+
+    // Admins see all active platform tests (no tenant filter).
+    // Regular users see only tests matching their tenant scope.
+    let tenantSql;
+    let params;
+    if (isAdmin) {
+      tenantSql = ``; // no restriction
+      params = [];
+    } else if (tenantId != null) {
+      tenantSql = `AND t.tenant_id = $1`;
+      params = [tenantId];
+    } else {
+      tenantSql = `AND t.tenant_id IS NULL`;
+      params = [];
+    }
+
     const { rows } = await pool.query(
       `SELECT t.id, t.title, t.description, t.duration_seconds, t.topic,
               COUNT(q.id)::int AS question_count
        FROM tests t
        LEFT JOIN questions q ON q.test_id = t.id
        WHERE t.author_id IS NULL AND t.is_active = true
+       ${tenantSql}
        GROUP BY t.id
-       ORDER BY t.created_at DESC`
+       ORDER BY t.created_at DESC`,
+      params
     );
     res.json(
       rows.map((r) => ({
@@ -75,17 +99,42 @@ testsRouter.get("/my", async (req, res, next) => {
 testsRouter.get("/:testId", async (req, res, next) => {
   try {
     const testId = req.params.testId;
+    const isAdmin = req.userRole === "admin";
+    const tenantId = req.user?.tenantId ?? null;
+
+    // Build the access predicate:
+    // - Admins bypass all tenant restrictions (can preview any test)
+    // - Tenant users see tests scoped to their tenant
+    // - Free users (no tenant) see global tests
+    // - Users always see their own authored tests
+    let accessSql;
+    let params;
+    if (isAdmin) {
+      // Admins can access any active test
+      accessSql = `WHERE t.id = $1 AND t.is_active = true`;
+      params = [testId];
+    } else {
+      accessSql = `WHERE t.id = $1 AND t.is_active = true
+        AND (
+          (t.author_id IS NULL AND (
+            ($2::uuid IS NOT NULL AND t.tenant_id = $2)
+            OR ($2::uuid IS NULL AND t.tenant_id IS NULL)
+          ))
+          OR t.author_id = $3::uuid
+        )`;
+      params = [testId, tenantId, req.userId];
+    }
+
     const testRes = await pool.query(
-      `SELECT id, title, description, duration_seconds, topic FROM tests
-       WHERE id = $1 AND is_active = true`,
-      [testId]
+      `SELECT id, title, description, duration_seconds, topic FROM tests t ${accessSql}`,
+      params
     );
     const test = testRes.rows[0];
     if (!test) {
       return res.status(404).json({ error: "Test not found" });
     }
     const qRes = await pool.query(
-      `SELECT id, prompt, option_a, option_b, option_c, option_d, order_index
+      `SELECT id, prompt, option_a, option_b, option_c, option_d, order_index, subject
        FROM questions WHERE test_id = $1 ORDER BY order_index ASC, id ASC`,
       [testId]
     );

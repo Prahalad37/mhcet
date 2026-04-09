@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createTest } from "@/lib/adminApi";
+import { createTest, getTenants } from "@/lib/adminApi";
 import { getUserErrorMessage } from "@/lib/errorMessages";
+import type { AdminTenant } from "@/lib/types";
+import { toastErrorSafe, toastSuccessSafe } from "@/lib/sonnerToast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { ADMIN_TOPIC_OPTIONS } from "@/lib/adminTopicOptions";
+import { TestTenantSelect } from "@/components/admin/TestTenantSelect";
 
 export default function NewTestPage() {
   const router = useRouter();
@@ -17,9 +20,33 @@ export default function NewTestPage() {
     durationSeconds: 7200, // 2 hours default
     topic: "",
     isActive: true,
+    tenantId: "" as string,
   });
+  const [tenants, setTenants] = useState<AdminTenant[]>([]);
+  const [tenantsLoading, setTenantsLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setTenantsLoading(true);
+      try {
+        const data = await getTenants();
+        if (!cancelled) setTenants(data);
+      } catch {
+        if (!cancelled) {
+          setTenants([]);
+          toastErrorSafe("Could not load tenants.");
+        }
+      } finally {
+        if (!cancelled) setTenantsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,16 +54,20 @@ export default function NewTestPage() {
 
     setCreating(true);
     setError(null);
-    
+
     try {
+      const tenantPayload =
+        formData.tenantId === "" ? null : formData.tenantId;
       const test = await createTest({
         title: formData.title,
         description: formData.description || undefined,
         durationSeconds: formData.durationSeconds,
         topic: formData.topic,
         isActive: formData.isActive,
+        tenantId: tenantPayload,
       });
-      
+
+      toastSuccessSafe("Test created");
       router.push(`/admin/tests/${test.id}/questions`);
     } catch (e) {
       setError(getUserErrorMessage(e, { fallback: "Could not create test." }));
@@ -97,7 +128,7 @@ export default function NewTestPage() {
                   value={Math.round(formData.durationSeconds / 60)}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    durationSeconds: parseInt(e.target.value) * 60 
+                    durationSeconds: parseInt(e.target.value, 10) * 60 
                   }))}
                   className="mt-1"
                 />
@@ -122,6 +153,17 @@ export default function NewTestPage() {
                 </select>
               </div>
             </div>
+
+            <TestTenantSelect
+              id="new-test-tenant"
+              value={formData.tenantId}
+              onChange={(tenantId) =>
+                setFormData((prev) => ({ ...prev, tenantId }))
+              }
+              tenants={tenants}
+              loading={tenantsLoading}
+              disabled={creating}
+            />
 
             <div className="flex items-center gap-2">
               <input

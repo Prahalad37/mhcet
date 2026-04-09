@@ -13,7 +13,7 @@ export function Alert({
   return (
     <div
       role="alert"
-      className={`rounded-xl border px-4 py-3 text-sm ${styles}`}
+      className={`rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 ease-in-out ${styles}`}
     >
       {message}
     </div>
