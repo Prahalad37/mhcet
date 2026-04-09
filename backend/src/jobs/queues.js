@@ -33,9 +33,11 @@ export function getImportQueue() {
 
 /**
  * Find a job by id and verify ownership.
+ * Returns null when Redis is unavailable (no REDIS_URL) instead of throwing.
  * @returns {Promise<{ job: import("bullmq").Job, kind: "explain" | "import" } | null>}
  */
 export async function findOwnedJob(jobId, userId) {
+  if (!process.env.REDIS_URL) return null;
   const eq = getExplainQueue();
   const iq = getImportQueue();
   let job = await eq.getJob(jobId);
