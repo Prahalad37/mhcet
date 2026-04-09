@@ -1,7 +1,8 @@
 -- B2B multi-tenant prep: coaching institutes as tenants.
 -- tenant_id = NULL on users/tests/attempts means direct B2C (PrepMaster platform). No NOT NULL on legacy rows.
+-- All DDL is idempotent — safe to re-run.
 
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   domain VARCHAR(255) UNIQUE,
@@ -10,19 +11,37 @@ CREATE TABLE tenants (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_tenants_status ON tenants (status);
+CREATE INDEX IF NOT EXISTS idx_tenants_status ON tenants (status);
 
-ALTER TABLE users
-  ADD COLUMN tenant_id UUID REFERENCES tenants (id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'users' AND column_name = 'tenant_id'
+  ) THEN
+    ALTER TABLE users ADD COLUMN tenant_id UUID REFERENCES tenants (id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
-CREATE INDEX idx_users_tenant_id ON users (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users (tenant_id);
 
-ALTER TABLE tests
-  ADD COLUMN tenant_id UUID REFERENCES tenants (id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'tests' AND column_name = 'tenant_id'
+  ) THEN
+    ALTER TABLE tests ADD COLUMN tenant_id UUID REFERENCES tenants (id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
-CREATE INDEX idx_tests_tenant_id ON tests (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_tests_tenant_id ON tests (tenant_id);
 
-ALTER TABLE attempts
-  ADD COLUMN tenant_id UUID REFERENCES tenants (id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'attempts' AND column_name = 'tenant_id'
+  ) THEN
+    ALTER TABLE attempts ADD COLUMN tenant_id UUID REFERENCES tenants (id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
-CREATE INDEX idx_attempts_tenant_id ON attempts (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_attempts_tenant_id ON attempts (tenant_id);

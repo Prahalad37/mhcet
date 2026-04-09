@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "[ \"$SKIP_DB_MIGRATE\" = \"true\" ] || npm run migrate && npm start",
+    "startCommand": "npm run start:prod",
     "healthcheckPath": "/health"
   }
 }
