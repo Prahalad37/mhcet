@@ -3,11 +3,16 @@ node_modules/
 .env.local
 backend/.env
 backend/.env.railway
+backend/.env.railway.bak
 frontend/.env.local
 .next/
 dist/
 *.log
+*.bak
 .DS_Store
+
+# IDE artifacts
+.cursor/
 
 # Playwright (e2e/)
 e2e/test-results/
