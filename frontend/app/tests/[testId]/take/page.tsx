@@ -25,6 +25,7 @@ import { OptionButton } from "@/components/test/OptionButton";
 import { PreExamGate } from "@/components/test/PreExamGate";
 import { QuestionPalette } from "@/components/test/QuestionPalette";
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
+import { Modal } from "@/components/ui/Modal";
 
 type SelectionKey = "A" | "B" | "C" | "D";
 
@@ -63,6 +64,7 @@ function TakeTestInner() {
   const [testPreview, setTestPreview] = useState<TestDetail | null>(null);
   const [startingExam, setStartingExam] = useState(false);
   const [examFocusMode, setExamFocusMode] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   const submitLockRef = useRef(false);
   const submitSucceededRef = useRef(false);
@@ -378,7 +380,9 @@ function TakeTestInner() {
 
   async function onSubmitForm(e: FormEvent) {
     e.preventDefault();
-    await submit();
+    const idx = Math.min(currentIndex, lastIndex);
+    if (idx < lastIndex) return;
+    setShowSubmitModal(true);
   }
 
   if (!mounted || !getToken()) {
@@ -641,19 +645,57 @@ function TakeTestInner() {
               {safeIndex >= lastIndex ? "Last question" : "Next"}
             </Button>
           </div>
-          <Button
-            type="submit"
-            disabled={navBusy}
-            title="Finishes after any pending saves"
-          >
-            {autoSubmitting
-              ? "Time up — submitting…"
-              : submitting
-                ? "Submitting…"
-                : "Submit test"}
-          </Button>
+          {safeIndex >= lastIndex ? (
+            <Button
+              type="button"
+              disabled={navBusy}
+              title="Finishes after any pending saves"
+              onClick={() => setShowSubmitModal(true)}
+            >
+              {autoSubmitting
+                ? "Time up — submitting…"
+                : submitting
+                  ? "Submitting…"
+                  : "Submit test"}
+            </Button>
+          ) : null}
         </div>
       </div>
+
+      <Modal
+        open={showSubmitModal}
+        title="Submit Test?"
+        onClose={() => setShowSubmitModal(false)}
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="ghost" onClick={() => setShowSubmitModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              disabled={submitting}
+              onClick={() => submit()}
+            >
+              {submitting ? "Submitting…" : "Confirm Submit"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-zinc-600 dark:text-zinc-400">
+            Are you sure you want to submit your test?
+          </p>
+          <div className="rounded-lg bg-zinc-50 border border-zinc-200/80 p-4 dark:bg-zinc-900/50 dark:border-zinc-800/80">
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              You have answered {answeredIndices.size} out of {questionCount} questions.
+            </p>
+          </div>
+          <p className="text-sm text-zinc-500 dark:text-zinc-500">
+            You cannot change your answers after submitting.
+          </p>
+        </div>
+      </Modal>
     </form>
   );
 }

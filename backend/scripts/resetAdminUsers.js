@@ -32,7 +32,7 @@ if (fs.existsSync(railwayEnvPath)) {
 const { pool } = await import("../src/db/pool.js");
 
 const email = (process.env.SINGLE_ADMIN_EMAIL || "superadmin@mhcet.local").toLowerCase().trim();
-const password = process.env.SINGLE_ADMIN_PASSWORD || "MhcetSuperAdmin!2026";
+const password = process.env.SINGLE_ADMIN_PASSWORD || "AntigravityMHCET!2026";
 
 async function main() {
   const client = await pool.connect();
