@@ -130,6 +130,7 @@ analyticsRouter.get("/insights", async (req, res, next) => {
          FROM tests t
          LEFT JOIN questions q ON q.test_id = t.id
          WHERE t.is_active = true
+           AND t.author_id IS NULL
            AND t.topic = ANY($1::text[])
          GROUP BY t.id`,
         [topicsForRecommend, userId]
@@ -164,6 +165,7 @@ analyticsRouter.get("/insights", async (req, res, next) => {
          FROM tests t
          LEFT JOIN questions q ON q.test_id = t.id
          WHERE t.is_active = true
+           AND t.author_id IS NULL
          GROUP BY t.id
          ORDER BY t.created_at DESC
          LIMIT 5`

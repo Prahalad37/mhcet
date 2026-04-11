@@ -551,7 +551,7 @@ adminRouter.get("/tests/:testId/questions", async (req, res, next) => {
     const { rows } = await pool.query(`
       SELECT * FROM questions 
       WHERE test_id = $1 
-      ORDER BY order_index ASC, created_at ASC
+      ORDER BY order_index ASC
     `, [testId]);
     
     res.json(rows.map(mapQuestionAdmin));
@@ -874,7 +874,9 @@ adminRouter.get("/import/template", (req, res) => {
   res.send(template);
 });
 
-// Import questions from CSV file (async job — poll GET /api/jobs/:jobId)
+// Import questions from CSV file
+// In dev (REDIS_URL unreachable or NODE_ENV=development) runs synchronously.
+// In prod with working Redis, queues an async job.
 adminRouter.post("/import/questions/:testId", upload.single("csvFile"), async (req, res, next) => {
   try {
     const testId = req.params.testId;
@@ -883,36 +885,39 @@ adminRouter.post("/import/questions/:testId", upload.single("csvFile"), async (r
       throw new HttpError(400, "No CSV file uploaded");
     }
 
-    if (!process.env.REDIS_URL) {
-      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
+    const csvText = req.file.buffer.toString("utf-8");
+    const isDev = process.env.NODE_ENV !== "production";
+
+    // Try async queue first (production path)
+    if (process.env.REDIS_URL && !isDev) {
+      let queue;
+      try {
+        queue = getImportQueue();
+        const job = await queue.add(
+          "import",
+          { userId: req.userId, testId, csvText },
+          { removeOnComplete: 200, removeOnFail: 100, attempts: 1 }
+        );
+        const jobId = String(job.id);
+        return res.status(202).json({
+          jobId,
+          status: "queued",
+          statusUrl: `/api/jobs/${jobId}`,
+        });
+      } catch {
+        // Fall through to synchronous import
+      }
     }
 
-    const csvText = req.file.buffer.toString("utf-8");
-    let queue;
-    try {
-      queue = getImportQueue();
-    } catch {
-      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
-    }
-    const job = await queue.add(
-      "import",
-      { userId: req.userId, testId, csvText },
-      {
-        removeOnComplete: 200,
-        removeOnFail: 100,
-        attempts: 1,
-      }
-    );
-    const jobId = String(job.id);
-    res.status(202).json({
-      jobId,
-      status: "queued",
-      statusUrl: `/api/jobs/${jobId}`,
-    });
+    // Synchronous import (dev mode or Redis unavailable)
+    const { importQuestionsFromCSV } = await import("../services/importService.js");
+    const result = await importQuestionsFromCSV(testId, csvText, req.userId);
+    return res.status(200).json({ status: "done", ...result });
   } catch (e) {
     next(e);
   }
 });
+
 
 // Import questions from raw CSV text (for testing/API clients)
 adminRouter.post("/import/questions/:testId/text", async (req, res, next) => {

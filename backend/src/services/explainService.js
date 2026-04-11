@@ -24,6 +24,9 @@ function resolveModelName() {
   if (provider === "openai") {
     return process.env.OPENAI_MODEL || "gpt-4o-mini";
   }
+  if (provider === "deepseek") {
+    return process.env.DEEPSEEK_MODEL || "deepseek-chat";
+  }
   if (provider === "local") {
     return process.env.LOCAL_LLM_MODEL || "local";
   }
@@ -189,6 +192,7 @@ async function callOpenAiStructured(row, block) {
   const sys = `You are an assistant for law entrance MCQs. Respond with a single JSON object with keys: answer (short string), explanation (string), concept (short string), example (string). No markdown fences.`;
   const user = `${block}\n\nReturn JSON only.`;
 
+
   const maxAttempts = 3;
   let lastErr;
   for (let i = 0; i < maxAttempts; i++) {
@@ -220,6 +224,54 @@ async function callOpenAiStructured(row, block) {
     }
   }
   throw new HttpError(503, `Explanation generation failed: ${lastErr?.message || "unknown"}`);
+}
+
+async function callDeepSeek(row, block) {
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) {
+    throw new HttpError(503, "DeepSeek API key is not configured (set DEEPSEEK_API_KEY)");
+  }
+  const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+  // DeepSeek is OpenAI-compatible — same SDK, different baseURL
+  const client = new OpenAI({
+    apiKey: key,
+    baseURL: "https://api.deepseek.com",
+  });
+  const sys = `You are an assistant for competitive exam MCQs (GK, Law, Reasoning). Respond with a single JSON object with keys: answer (short string), explanation (2-3 sentences), concept (short label), example (real-world example sentence). No markdown fences.`;
+  const user = `${block}\n\nReturn JSON only.`;
+
+  const maxAttempts = 3;
+  let lastErr;
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const completion = await client.chat.completions.create({
+        model,
+        temperature: 0.3,
+        max_tokens: 1200,
+        messages: [
+          { role: "system", content: sys },
+          { role: "user", content: user },
+        ],
+      });
+      const text = completion.choices[0]?.message?.content?.trim() || "";
+      // Strip markdown fences if model returns them
+      const clean = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+      const parsed = JSON.parse(clean);
+      const answer = String(parsed.answer ?? "").trim();
+      const explanation = String(parsed.explanation ?? "").trim();
+      const concept = String(parsed.concept ?? "").trim();
+      const example = String(parsed.example ?? "").trim();
+      if (answer.length < 5 || explanation.length < 10 || concept.length < 2) {
+        throw new Error("DeepSeek output too short");
+      }
+      return { answer, explanation, concept, example };
+    } catch (e) {
+      lastErr = e;
+      const delay = 400 * Math.pow(2, i);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw new HttpError(503, `DeepSeek explanation failed: ${lastErr?.message || "unknown"}`);
 }
 
 async function callLocalLlm(row, block) {
@@ -310,6 +362,8 @@ export async function runExplainJob(params) {
     let payload;
     if (provider === "openai") {
       payload = await callOpenAiStructured(row, block);
+    } else if (provider === "deepseek") {
+      payload = await callDeepSeek(row, block);
     } else if (provider === "local") {
       payload = await callLocalLlm(row, block);
     } else {
