@@ -1,0 +1,31 @@
+question,optionA,optionB,optionC,optionD,correct,subject,hint,explanation
+"What is 15% of 80?",10,12,14,20,B,Basic Math,15% = 15/100; multiply by 80,15% of 80 = (15/100) × 80 = 1200/100 = 12.
+"A train travels 300 km in 5 hours. What is its speed in km/h?",55,60,65,70,B,Basic Math,Speed = Distance ÷ Time,Speed = 300 ÷ 5 = 60 km/h.
+"If 3x + 7 = 22 then x = ?",4,5,6,7,B,Basic Math,Isolate x: subtract 7 then divide by 3,3x = 22 – 7 = 15. x = 15 ÷ 3 = 5.
+"What is the LCM of 12 and 18?",24,36,48,72,B,Basic Math,LCM is the smallest number divisible by both,12 = 2² × 3. 18 = 2 × 3². LCM = 2² × 3² = 36.
+"A shopkeeper buys a pen for ₹40 and sells it for ₹50. What is his profit percentage?",20%,25%,30%,15%,B,Basic Math,Profit% = (Profit ÷ Cost Price) × 100,Profit = 50 – 40 = ₹10. Profit% = (10/40) × 100 = 25%.
+"What is the square root of 169?",11,12,13,14,C,Basic Math,Think 13 × 13 = ?,13 × 13 = 169. So √169 = 13.
+"The ratio of boys to girls in a class is 3:2. If there are 30 students total how many girls are there?",10,12,15,18,B,Basic Math,Girls = (2/5) of total students,Total parts = 3+2 = 5. Girls = (2/5) × 30 = 12.
+"A cistern can be filled in 6 hours and emptied in 10 hours. If both pipes are open how long to fill it?",12 hours,15 hours,20 hours,9 hours,B,Basic Math,Net rate = fill rate – empty rate,Fill rate = 1/6. Empty rate = 1/10. Net = 1/6 – 1/10 = 5/30 – 3/30 = 2/30 = 1/15. Time = 15 hours.
+"What is the area of a circle with radius 7 cm? (Take π = 22/7)",154 cm²,144 cm²,132 cm²,176 cm²,A,Basic Math,Area = πr²,Area = (22/7) × 7 × 7 = 22 × 7 = 154 cm².
+"Simple Interest on ₹2000 at 5% per annum for 3 years is?",₹200,₹250,₹300,₹350,C,Basic Math,SI = (P × R × T) / 100,SI = (2000 × 5 × 3) / 100 = 30000/100 = ₹300.
+"If the cost price of 12 articles is equal to the selling price of 10 articles what is the profit percentage?",10%,15%,20%,25%,C,Basic Math,SP of 10 = CP of 12; find profit per article,CP of 12 = SP of 10. So SP/CP = 12/10. Profit% = (12–10)/10 × 100 = 20%.
+"The average of 5 numbers is 20. If one number is removed the average becomes 18. What is the removed number?",24,26,28,30,C,Basic Math,Total – remaining total = removed number,Total of 5 = 5×20 = 100. Total of 4 = 4×18 = 72. Removed = 100 – 72 = 28.
+"A man rows upstream at 5 km/h and downstream at 9 km/h. What is the speed of the stream?",1 km/h,2 km/h,3 km/h,4 km/h,B,Basic Math,Speed of stream = (downstream – upstream) / 2,Speed of stream = (9 – 5) / 2 = 4/2 = 2 km/h.
+"What is (a + b)² equal to?",a² + b²,a² – 2ab + b²,a² + 2ab + b²,2a + 2b,C,Basic Math,Expand the square of a binomial,(a+b)² = a × a + 2 × a × b + b × b = a² + 2ab + b².
+"If 5 men can do a job in 12 days how many days will 10 men take to do the same job?",6 days,8 days,10 days,15 days,A,Basic Math,More men = fewer days (inverse proportion),Men × Days = constant. 5 × 12 = 10 × D. D = 60/10 = 6 days.
+"A cone has base radius 3 cm and height 4 cm. Its slant height is?",5 cm,6 cm,7 cm,8 cm,A,Basic Math,Use Pythagoras: l² = r² + h²,Slant height l = √(r² + h²) = √(9 + 16) = √25 = 5 cm.
+"What is 0.5% of 2000?",10,100,200,5,A,Basic Math,0.5% = 0.005; multiply by 2000,0.5% of 2000 = (0.5/100) × 2000 = 0.005 × 2000 = 10.
+"The sum of angles of a triangle is?",90°,180°,270°,360°,B,Basic Math,This is a basic geometry theorem,The sum of all interior angles of a triangle is always 180°.
+"A car travels 60 km in the first hour and 80 km in the second hour. What is the average speed?",65,70,75,80,B,Basic Math,Average speed = Total distance ÷ Total time,Total distance = 60 + 80 = 140 km. Total time = 2 hours. Average speed = 140/2 = 70 km/h.
+"The compound interest on ₹1000 at 10% per annum for 2 years is?",₹200,₹210,₹220,₹250,B,Basic Math,CI = P(1 + r)ⁿ – P,CI = 1000(1.1)² – 1000 = 1000 × 1.21 – 1000 = 1210 – 1000 = ₹210.
+"Which of the following is a prime number?",21,22,23,24,C,Basic Math,Prime = divisible only by 1 and itself,23 is divisible only by 1 and 23. 21=3×7 22=2×11 24=2×12.
+"If x² – 5x + 6 = 0 then the values of x are?",2 and 3,1 and 6,–2 and –3,3 and 6,A,Basic Math,Factorise: find two numbers that multiply to 6 and add to –5,x² – 5x + 6 = (x–2)(x–3) = 0. So x = 2 or x = 3.
+"A discount of 20% on an article marked ₹500 gives a sale price of?",₹350,₹400,₹450,₹380,B,Basic Math,Discount = 20% of 500,Discount = (20/100) × 500 = ₹100. Sale price = 500 – 100 = ₹400.
+"How many diagonals does a hexagon have?",6,8,9,12,C,Basic Math,Diagonals = n(n–3)/2 where n = sides,For hexagon n=6: Diagonals = 6(6–3)/2 = 6×3/2 = 9.
+"A bag has 4 red and 6 blue balls. If one ball is drawn randomly what is the probability of getting a red ball?",2/5,3/5,1/2,1/4,A,Basic Math,P = favourable outcomes / total outcomes,Total balls = 10. Red balls = 4. P(red) = 4/10 = 2/5.
+"Find HCF of 24 and 36.",6,12,18,24,B,Basic Math,HCF = highest common factor,24 = 2³ × 3. 36 = 2² × 3². HCF = 2² × 3 = 12.
+"If the perimeter of a square is 48 cm its area is?",100 cm²,116 cm²,136 cm²,144 cm²,D,Basic Math,Side = Perimeter ÷ 4; Area = side²,Side = 48/4 = 12 cm. Area = 12² = 144 cm².
+"A sum of money doubles itself in 10 years at simple interest. What is the rate of interest?",5%,8%,10%,12%,C,Basic Math,SI = P so P = PRT/100; T=10,If P doubles then SI = P. P = P × R × 10 / 100. 1 = R/10. R = 10%.
+"What is the value of (1/2 + 1/3)?",3/5,5/6,2/5,4/6,B,Basic Math,Find LCM of denominators: 2 and 3,LCM of 2 and 3 is 6. 1/2 + 1/3 = 3/6 + 2/6 = 5/6.
+"A room 8m × 6m has a floor. What is the cost to carpet it at ₹50 per m²?",₹2200,₹2400,₹2800,₹3000,B,Basic Math,Area = length × breadth; cost = area × rate,Area = 8 × 6 = 48 m². Cost = 48 × 50 = ₹2400.
