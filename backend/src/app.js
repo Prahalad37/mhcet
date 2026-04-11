@@ -23,6 +23,17 @@ import { logWarn } from "./utils/logger.js";
 
 dotenv.config();
 
+// Warm up the Redis/BullMQ connection at startup (if REDIS_URL is set) so the
+// first explain request does not incur the TLS handshake delay and hit the timeout.
+if (process.env.REDIS_URL) {
+  try {
+    const { getExplainQueue } = await import("./jobs/queues.js");
+    getExplainQueue(); // initialise connection now, not on first request
+  } catch {
+    // Non-fatal — queue will be initialised lazily on first request.
+  }
+}
+
 const defaultDevOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -114,6 +125,8 @@ export function createApp() {
   app.use(httpLogMiddleware);
   app.use(cors(buildCorsOptions()));
   app.use(express.json({ limit: "1mb" }));
+  // Explain jobs just enqueue to Redis — give more time for TLS handshake on first connect.
+  app.use("/api/explain", requestTimeoutMiddleware(30_000));
   app.use(requestTimeoutMiddleware(10_000));
   app.use("/api", apiGlobalLimiter);
 
