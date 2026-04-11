@@ -237,7 +237,11 @@ async function callDeepSeek(row, block) {
     apiKey: key,
     baseURL: "https://api.deepseek.com",
   });
-  const sys = `You are an assistant for competitive exam MCQs (GK, Law, Reasoning). Respond with a single JSON object with keys: answer (short string), explanation (2-3 sentences), concept (short label), example (real-world example sentence). No markdown fences.`;
+  const sys = `You are an assistant for competitive exam MCQs (GK, Law, Reasoning). Respond ONLY with a single JSON object (no markdown) with exactly these keys:
+- answer: which option is correct (e.g. "Option B – Guilty mind")
+- explanation: 2-3 sentence explanation of why it is correct
+- concept: 2-5 word label for the concept tested (e.g. "Mens Rea")
+- example: one real-world example sentence illustrating the concept`;
   const user = `${block}\n\nReturn JSON only.`;
 
   const maxAttempts = 3;
@@ -261,8 +265,8 @@ async function callDeepSeek(row, block) {
       const explanation = String(parsed.explanation ?? "").trim();
       const concept = String(parsed.concept ?? "").trim();
       const example = String(parsed.example ?? "").trim();
-      if (answer.length < 5 || explanation.length < 10 || concept.length < 2) {
-        throw new Error("DeepSeek output too short");
+      if (answer.length < 1 || explanation.length < 15 || concept.length < 2) {
+        throw new Error(`DeepSeek output too short — answer:${answer.length} explanation:${explanation.length} concept:${concept.length}`);
       }
       return { answer, explanation, concept, example };
     } catch (e) {
