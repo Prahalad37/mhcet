@@ -886,30 +886,10 @@ adminRouter.post("/import/questions/:testId", upload.single("csvFile"), async (r
     }
 
     const csvText = req.file.buffer.toString("utf-8");
-    const isDev = process.env.NODE_ENV !== "production";
 
-    // Try async queue first (production path)
-    if (process.env.REDIS_URL && !isDev) {
-      let queue;
-      try {
-        queue = getImportQueue();
-        const job = await queue.add(
-          "import",
-          { userId: req.userId, testId, csvText },
-          { removeOnComplete: 200, removeOnFail: 100, attempts: 1 }
-        );
-        const jobId = String(job.id);
-        return res.status(202).json({
-          jobId,
-          status: "queued",
-          statusUrl: `/api/jobs/${jobId}`,
-        });
-      } catch {
-        // Fall through to synchronous import
-      }
-    }
-
-    // Synchronous import (dev mode or Redis unavailable)
+    // Always use synchronous import — no separate worker process is running.
+    // BullMQ queue path removed: jobs were queued but never picked up on Railway,
+    // causing "Job not found" errors in the UI.
     const { importQuestionsFromCSV } = await import("../services/importService.js");
     const result = await importQuestionsFromCSV(testId, csvText, req.userId);
     return res.status(200).json({ status: "done", ...result });
