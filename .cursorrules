@@ -8,7 +8,7 @@
 B2B/B2C EdTech SaaS for MHCET Law (5-Year LLB) exam preparation.
 - Platform: PrepMaster (brand) / MHCET (project folder)
 - Live URL: https://mhcet-azure.vercel.app
-- Admin login: admin@mhcet.com (local password: Admin@1234)
+- Admin login: admin@mhcet.com (local password: set in seed / `changeAdminPassword.js` — do not commit real passwords)
 
 ## MONOREPO STRUCTURE
 ```
@@ -49,11 +49,11 @@ B2B/B2C EdTech SaaS for MHCET Law (5-Year LLB) exam preparation.
 ### Backend (`.env` — NEVER commit)
 ```
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mhcet
-JWT_SECRET=mysupersecretkey123
+JWT_SECRET=<generate a long random string; 32+ chars in production>
 AI_PROVIDER=deepseek
-DEEPSEEK_API_KEY=sk-1b38da88449d4eb09876f8e01dcd7ddf
+DEEPSEEK_API_KEY=<from DeepSeek console; set only in backend/.env or Railway — never commit>
 DEEPSEEK_MODEL=deepseek-chat
-REDIS_URL=rediss://default:...@nice-ladybird-82116.upstash.io:6379
+REDIS_URL=<Upstash or local Redis URL; see backend/.env.example>
 CORS_ORIGIN=http://localhost:3000
 PORT=4000
 ```
@@ -186,7 +186,7 @@ cd backend && npm run worker
 
 ### Production admin
 - Password: set via `backend/scripts/changeAdminPassword.js`
-- Default new password in script: `AntigravityAdmin2026!`
+- Set password via env when running the script (do not document real passwords in repo)
 
 ## CURRENT STATUS (as of April 2026)
 - ✅ 3 public tests in production (after recreation)
