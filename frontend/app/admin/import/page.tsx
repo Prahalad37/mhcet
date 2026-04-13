@@ -132,7 +132,10 @@ function AdminImportForm() {
             </label>
             <select
               value={selectedTest}
-              onChange={(e) => setSelectedTest(e.target.value)}
+              onChange={(e) => {
+                setResult(null);
+                setSelectedTest(e.target.value);
+              }}
               className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
             >
               <option value="">Select a test…</option>
@@ -179,54 +182,68 @@ function AdminImportForm() {
               id="csvFile"
               type="file"
               accept=".csv"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                setResult(null);
+                setFile(e.target.files?.[0] || null);
+              }}
               className="mt-1 block w-full text-sm text-zinc-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-sky-700 hover:file:bg-sky-100 dark:text-zinc-400 dark:file:bg-sky-950/50 dark:file:text-sky-300 dark:hover:file:bg-sky-950/70"
             />
           </div>
 
-          {/* Import Button */}
+          {/* Import Button — success state shown here after a good import */}
           <Button
-            disabled={!file || !selectedTest || importing}
+            disabled={
+              (result?.success && !importing) ||
+              importing ||
+              !selectedTest ||
+              !file
+            }
             onClick={handleImport}
-            className="w-full"
+            className={`w-full flex-col gap-1 py-3 h-auto min-h-[2.75rem] ${
+              result?.success && !importing
+                ? "!bg-emerald-600 !text-white shadow-sm hover:!bg-emerald-600 disabled:!cursor-default disabled:!opacity-100 disabled:!bg-emerald-600 dark:!bg-emerald-600 dark:hover:!bg-emerald-600 dark:disabled:!bg-emerald-600"
+                : ""
+            }`}
           >
-            {importing ? "Importing..." : "Import Questions"}
+            {importing ? (
+              "Importing..."
+            ) : result?.success ? (
+              <>
+                <span className="text-sm font-semibold">✓ Import complete</span>
+                <span className="max-w-full truncate px-1 text-xs font-normal text-white/95">
+                  {result.imported} / {result.total} questions · {result.testTitle}
+                </span>
+              </>
+            ) : (
+              "Import Questions"
+            )}
           </Button>
         </div>
       </div>
 
       {/* Results */}
       {error && <Alert message={error} />}
-      
-      {result && (
-        <div className={`rounded-2xl border p-5 ${
-          result.success
-            ? "border-emerald-200 bg-emerald-50/80 dark:border-emerald-800 dark:bg-emerald-950/30"
-            : "border-amber-200 bg-amber-50/80 dark:border-amber-800 dark:bg-amber-950/30"
-        }`}>
-          <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">
-            Import Complete
+
+      {result?.success && result.errors && result.errors.length > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 dark:border-amber-800 dark:bg-amber-950/30">
+          <h3 className="font-semibold text-amber-900 dark:text-amber-100">
+            Some rows were skipped
           </h3>
-          <div className="mt-2 text-sm text-emerald-800 dark:text-emerald-200">
-            <p>
-              Successfully imported {result.imported} of {result.total} questions to{" "}
-              <span className="font-medium">{result.testTitle}</span>
-            </p>
-            {result.errors && result.errors.length > 0 && (
-              <div className="mt-3">
-                <p className="font-medium">Validation errors (skipped rows):</p>
-                <ul className="mt-1 list-disc list-inside space-y-1 text-xs">
-                  {result.errors.slice(0, 5).map((error, i) => (
-                    <li key={i}>{error}</li>
-                  ))}
-                  {result.errors.length > 5 && (
-                    <li>... and {result.errors.length - 5} more errors</li>
-                  )}
-                </ul>
-              </div>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-amber-900 dark:text-amber-200">
+            {result.errors.slice(0, 5).map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+            {result.errors.length > 5 && (
+              <li>... and {result.errors.length - 5} more</li>
             )}
-          </div>
+          </ul>
         </div>
+      )}
+
+      {result && !result.success && (
+        <Alert
+          message={`Import did not complete successfully. Imported ${result.imported} of ${result.total}.`}
+        />
       )}
     </div>
   );

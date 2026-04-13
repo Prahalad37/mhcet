@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Building2, Loader2, Pencil } from "lucide-react";
+import { Building2, Loader2, Pencil, Trash2 } from "lucide-react";
 import {
+  deleteAdminUser,
   getAdminUsers,
   getTenants,
   updateUserPlan,
   updateUserRole,
   updateUserTenant,
 } from "@/lib/adminApi";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getUserErrorMessage } from "@/lib/errorMessages";
 import type { AdminTenant, AdminUser } from "@/lib/types";
 import { toastErrorSafe, toastSuccessSafe } from "@/lib/sonnerToast";
@@ -18,6 +20,7 @@ import { PageLoadingState } from "@/components/ui/PageLoadingState";
 import { PageErrorState } from "@/components/ui/PageErrorState";
 
 export default function AdminUsersPage() {
+  const { user: me } = useCurrentUser();
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [tenants, setTenants] = useState<AdminTenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,6 +151,29 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDeleteUser = async (user: AdminUser) => {
+    if (actionLoading || user.id === me?.id) return;
+    if (
+      !confirm(
+        `Permanently delete ${user.email}? All attempts, practice progress, and personal mocks for this account will be removed.`
+      )
+    ) {
+      return;
+    }
+    setActionLoading(user.id);
+    try {
+      await deleteAdminUser(user.id);
+      setUsers((prev) => prev?.filter((u) => u.id !== user.id) ?? null);
+      toastSuccessSafe("User deleted");
+    } catch (e) {
+      toastErrorSafe(
+        getUserErrorMessage(e, { fallback: "Could not delete user." })
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   function tenantLabel(u: AdminUser) {
     if (!u.tenantId) {
       return (
@@ -188,7 +214,12 @@ export default function AdminUsersPage() {
           Users Management
         </h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-          Roles, plans, and B2B tenant assignment. B2C users have no tenant.
+          Roles, plans, and B2B tenant assignment. B2C users have no tenant.{" "}
+          <span className="text-zinc-500 dark:text-zinc-500">
+            Free plan: daily cap on <strong className="font-medium text-zinc-600 dark:text-zinc-400">new timed mocks</strong> per UTC day (
+            <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">FREE_TESTS_PER_DAY</code>, default{" "}
+            <strong className="font-medium">2</strong> if unset). Paid = unlimited mocks. Practice mode is not capped by this limit.
+          </span>
         </p>
       </div>
 
@@ -315,6 +346,25 @@ export default function AdminUsersPage() {
                           {actionLoading === user.id ? "…" : "Remove admin"}
                         </Button>
                       )}
+                      {user.id !== me?.id ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={actionLoading === user.id}
+                          onClick={() => void handleDeleteUser(user)}
+                          className="text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                          title="Delete user"
+                        >
+                          {actionLoading === user.id ? (
+                            "…"
+                          ) : (
+                            <span className="inline-flex items-center gap-1">
+                              <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                              Delete
+                            </span>
+                          )}
+                        </Button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

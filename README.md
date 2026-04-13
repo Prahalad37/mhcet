@@ -1,6 +1,6 @@
 # MHCET Law Mock Test
 
-Production-oriented mock exam app: **Next.js** frontend, **Express** API, **PostgreSQL**, **JWT** auth, timed MCQ attempts, scored results, and **OpenAI**-powered explanations. Heavy work runs on **BullMQ** + **Redis** (`POST /api/explain` and admin CSV import return **202** + `jobId`; clients poll **`GET /api/jobs/:jobId`**).
+Production-oriented mock exam app: **Next.js** frontend, **Express** API, **PostgreSQL**, **JWT** auth, timed MCQ attempts, scored results, and optional **AI** explanations. **BullMQ** + **Redis** are used for **`POST /api/explain`** only (**202** + `jobId`; poll **`GET /api/jobs/:jobId`**). **Admin CSV question import** is **synchronous** (**200** + `{ status: "done", … }`) on both multipart and **`/text`** routes—no import worker required.
 
 ## Prerequisites
 
@@ -60,13 +60,15 @@ npm run dev
 
 API listens on `http://localhost:4000` (or `PORT`). Health check: `GET /health`.
 
-**Async jobs (AI explain + bulk CSV import)** need **Redis** and a **worker** process:
+**Async jobs (AI explain only)** need **Redis** and a **worker** process:
 
 1. Start Redis, e.g. `docker run -d --name redis -p 6379:6379 redis:7-alpine`
 2. Set **`REDIS_URL`** in `backend/.env` (see `backend/.env.example`), e.g. `redis://127.0.0.1:6379`
 3. In a **second** terminal: `cd backend && npm run worker`
 
-Without Redis + worker, `POST /api/explain` and admin CSV import return **503** with a clear error.
+Without Redis + worker, `POST /api/explain` returns **503** with a clear error. **CSV import** still works (sync on the API process).
+
+**Operations / alerting (lightweight):** ping **`GET /health`** from your host or an uptime monitor; **503** means DB or startup failure. Watch API logs for **`unhandled_error`**, **`http_error`** (5xx), and worker logs for **`worker_job_failed`** on the explain queue. Run **`npm run verify:prod-env`** (from `backend/`) before deploy to catch bad **`DATABASE_URL`** / **`JWT_SECRET`**.
 
 ### Single admin only (delete all other users)
 
@@ -142,14 +144,14 @@ Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` to match the API origin.
 
 | App      | Variable              | Purpose                          |
 |----------|-----------------------|----------------------------------|
-| Backend  | `REDIS_URL`           | **Required** for BullMQ job queues (explain + CSV import), e.g. `redis://127.0.0.1:6379` |
+| Backend  | `REDIS_URL`           | **Required** for **`POST /api/explain`** (BullMQ + worker). Optional if you disable AI explain. Not used for CSV import. |
 | Backend  | `DATABASE_URL`        | PostgreSQL connection string     |
 | Backend  | `JWT_SECRET`          | Sign JWT access tokens           |
 | Backend  | `JWT_EXPIRES_IN`      | Token lifetime (default `7d`)    |
 | Backend  | `OPENAI_API_KEY`      | Explanations feature (**server only**; never use in Next `NEXT_PUBLIC_*`) |
 | Backend  | `OPENAI_MODEL`        | e.g. `gpt-4o-mini`               |
 | Backend  | `EXPLAIN_DAILY_LIMIT` | Max **OpenAI** explanation calls per user per **UTC** day (default `5`). Identical questions reuse DB cache and do **not** count. |
-| Backend  | `FREE_TESTS_PER_DAY` | Max **new mock attempts** per **UTC** day for `users.plan = free` (default `2`). `plan = paid` is unlimited. Admins set plan via `PUT /api/admin/users/:id/plan`. |
+| Backend  | `FREE_TESTS_PER_DAY` | Max **new mock attempts** per **UTC** day for `users.plan = free` (defaults to **`2`** if unset or invalid). Set **`0`** for a hard block (usually avoid). Very large values approximate unlimited for dev. `plan = paid` is unlimited. Admins set plan via `PUT /api/admin/users/:id/plan`. |
 | Backend  | `CORS_ORIGIN`         | Comma-separated browser origins. **Development:** merged with localhost defaults. **Production** (`NODE_ENV=production`): only these origins are allowed; set explicitly (e.g. `https://your-app.vercel.app`). **Required** for browser login from Vercel — without it the API returns **403** on CORS and the UI shows “Unable to connect”. |
 | Backend  | `CORS_ALLOW_VERCEL_APP` | In **production**, **`https://*.vercel.app`** is allowed **by default** so Vercel login works without extra env. Set to **`false`** or **`0`** to disable and rely only on **`CORS_ORIGIN`** (stricter). |
 | Backend  | `TRUST_PROXY`         | Set to `true` when the API sits behind a reverse proxy so `X-Forwarded-*` is trusted. |
@@ -202,6 +204,8 @@ Hobby or scaled-to-zero hosts can wake slowly; the first request may see **502 /
 | `CORS_ORIGIN` = Vercel URL(s) | Build succeeds | `/health` → `status: "ok"`, `database: "up"` |
 | `TRUST_PROXY=true` | | |
 | `SKIP_DB_MIGRATE` unset (migrate in entrypoint) or external migrate + `SKIP_DB_MIGRATE=true` | | |
+
+**Pre-push from the repo:** run the same gates as CI — `cd frontend && npm run typecheck && npm run lint && npm run build`; `cd backend && npm test`. Then preflight env shape (no real secrets in shell history if you can avoid it): `cd backend && NODE_ENV=production JWT_SECRET=<32+ chars> DATABASE_URL=<postgres url> CORS_ORIGIN=https://<your-vercel-app> npm run verify:prod-env`. Commit, push `main` (or your prod branch); confirm **GitHub Actions** green. After deploy, smoke `GET https://<api>/health` and open the live site (DevTools → **API URL:** log).
 
 ## Troubleshooting registration / login
 

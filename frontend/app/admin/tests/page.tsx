@@ -213,7 +213,7 @@ export default function AdminTestsPage() {
     if (actionLoading) return;
     if (
       !confirm(
-        `Delete "${test.title}"? This action cannot be undone if the test has no attempts.`
+        `Remove "${test.title}" from the catalog?\n\n• If any student has already submitted this mock, it will be deactivated (hidden) but kept so results stay valid. Questions stay in the database.\n• Only tests with zero submitted attempts are deleted permanently.`
       )
     ) {
       return;
@@ -221,9 +221,21 @@ export default function AdminTestsPage() {
 
     setActionLoading(test.id);
     try {
-      await deleteTest(test.id);
-      setTests((prev) => prev?.filter((t) => t.id !== test.id) ?? null);
-      toastSuccessSafe("Test removed");
+      const res = await deleteTest(test.id);
+      if (res.test) {
+        // Soft delete: row still exists (inactive). Keep it in the list so counts match the DB.
+        setTests((prev) =>
+          prev?.map((t) => (t.id === res.test!.id ? res.test! : t)) ?? [
+            res.test!,
+          ]
+        );
+        toastSuccessSafe(
+          "Mock deactivated (hidden from students). Past attempts are unchanged."
+        );
+      } else {
+        setTests((prev) => prev?.filter((t) => t.id !== test.id) ?? null);
+        toastSuccessSafe("Test permanently deleted");
+      }
     } catch (e) {
       toastErrorSafe(
         getUserErrorMessage(e, { fallback: "Could not delete test." })
@@ -573,12 +585,9 @@ export default function AdminTestsPage() {
                       }
                       className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
                     >
-                      {[
-                        ...new Set([
-                          editForm.topic,
-                          ...ADMIN_TOPIC_OPTIONS,
-                        ]),
-                      ].map((topic) => (
+                      {Array.from(
+                        new Set([editForm.topic, ...ADMIN_TOPIC_OPTIONS])
+                      ).map((topic) => (
                         <option key={topic} value={topic}>
                           {topic}
                         </option>

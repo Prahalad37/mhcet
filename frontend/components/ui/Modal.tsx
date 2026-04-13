@@ -14,6 +14,12 @@ type Props = {
   bodyClassName?: string;
   surfaceClassName?: string;
   headerClassName?: string;
+  /** Override default title styles (e.g. light text on gradient header). */
+  titleClassName?: string;
+  /** Override default subtitle wrapper styles. */
+  subtitleClassName?: string;
+  /** Override close button styles in header. */
+  closeButtonClassName?: string;
   backdropClassName?: string;
   /** When true, use larger max width and Google-style shell */
   wide?: boolean;
@@ -29,6 +35,9 @@ export function Modal({
   bodyClassName = "",
   surfaceClassName = "",
   headerClassName = "",
+  titleClassName = "",
+  subtitleClassName = "",
+  closeButtonClassName = "",
   backdropClassName = "",
   wide = false,
 }: Props) {
@@ -65,19 +74,21 @@ export function Modal({
           <div className="min-w-0 flex-1 space-y-0.5">
             <h2
               id="modal-title"
-              className="text-[1.05rem] font-medium tracking-tight text-zinc-900 dark:text-zinc-50"
+              className={`text-[1.05rem] font-medium tracking-tight text-zinc-900 dark:text-zinc-50 ${titleClassName}`}
             >
               {title}
             </h2>
             {subtitle ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <div
+                className={`text-sm text-zinc-500 dark:text-zinc-400 ${subtitleClassName}`}
+              >
                 {subtitle}
-              </p>
+              </div>
             ) : null}
           </div>
           <Button
             variant="ghost"
-            className="!h-9 !w-9 shrink-0 !rounded-full !p-0 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            className={`!h-9 !w-9 shrink-0 !rounded-full !p-0 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 ${closeButtonClassName}`}
             onClick={onClose}
             aria-label="Close"
           >

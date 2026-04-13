@@ -1,6 +1,7 @@
 import { pool } from "../db/pool.js";
 import { parseCSV, validateQuestionCSV } from "../utils/csvParser.js";
 import { HttpError } from "../utils/httpError.js";
+import { logInfo } from "../utils/logger.js";
 
 /**
  * Import questions from CSV data
@@ -58,15 +59,18 @@ export async function importQuestionsFromCSV(testId, csvText, userId) {
         let queryTemplate = `
           INSERT INTO questions (
             test_id, prompt, option_a, option_b, option_c, option_d,
-            correct_option, subject, hint, official_explanation, order_index
+            correct_option, subject, hint, official_explanation, order_index,
+            prompt_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, hint_hi, official_explanation_hi
           ) VALUES
         `;
         const values = [];
         const placeholders = [];
 
         batch.forEach((questionData, index) => {
-          const offset = index * 11;
-          placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`);
+          const offset = index * 18;
+          placeholders.push(
+            `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12}, $${offset + 13}, $${offset + 14}, $${offset + 15}, $${offset + 16}, $${offset + 17}, $${offset + 18})`
+          );
 
           values.push(
             testId,
@@ -79,7 +83,14 @@ export async function importQuestionsFromCSV(testId, csvText, userId) {
             questionData.subject,
             questionData.hint,
             questionData.officialExplanation,
-            nextOrderIndex++
+            nextOrderIndex++,
+            questionData.promptHi ?? null,
+            questionData.optionAHi ?? null,
+            questionData.optionBHi ?? null,
+            questionData.optionCHi ?? null,
+            questionData.optionDHi ?? null,
+            questionData.hintHi ?? null,
+            questionData.officialExplanationHi ?? null
           );
         });
 
@@ -91,8 +102,13 @@ export async function importQuestionsFromCSV(testId, csvText, userId) {
       
       await client.query('COMMIT');
       
-      // Log the import action
-      console.log(`Admin ${userId} imported ${validRows.length} questions to test ${testId} (${testTitle})`);
+      logInfo({
+        msg: "csv_import_complete",
+        userId,
+        testId,
+        testTitle,
+        importedCount: validRows.length,
+      });
       
       return {
         success: true,
@@ -124,26 +140,40 @@ export async function importQuestionsFromCSV(testId, csvText, userId) {
 export function generateCSVTemplate() {
   const headers = [
     'question',
-    'optionA', 
+    'optionA',
     'optionB',
-    'optionC', 
+    'optionC',
     'optionD',
     'correct',
     'subject',
     'hint',
-    'explanation'
+    'explanation',
+    'questionHi',
+    'optionAHi',
+    'optionBHi',
+    'optionCHi',
+    'optionDHi',
+    'hintHi',
+    'explanationHi',
   ];
-  
+
   const sampleRow = [
     'Which article of the Indian Constitution deals with equality before law?',
     'Article 12',
-    'Article 14', 
+    'Article 14',
     'Article 19',
     'Article 21',
     'B',
     'Legal Aptitude',
     'Think about fundamental rights in Part III',
-    'Article 14 guarantees equality before law and equal protection of laws'
+    'Article 14 guarantees equality before law and equal protection of laws',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
   ];
   
   // Format as CSV with proper quoting

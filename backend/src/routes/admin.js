@@ -6,7 +6,6 @@ import { adminOnly } from "../middleware/requireAdmin.js";
 import { HttpError } from "../utils/httpError.js";
 import { logWarn } from "../utils/logger.js";
 import { generateCSVTemplate } from "../services/importService.js";
-import { getImportQueue } from "../jobs/queues.js";
 import { auditCreate, auditUpdate, auditDelete, captureOldData } from "../middleware/auditLogger.js";
 
 export const adminRouter = Router();
@@ -38,6 +37,9 @@ const createTestSchema = z.object({
   isActive: z.boolean().optional().default(true),
   /** Omit → global/B2C (`tenant_id` null). UUID assigns to institute; `null` / `""` clears. */
   tenantId: z.union([z.string().uuid(), z.null(), z.literal("")]).optional(),
+  /** Markdown; shown on pre-exam screen before timer. */
+  generalInstructions: z.string().max(50000).optional().nullable(),
+  generalInstructionsHi: z.string().max(50000).optional().nullable(),
 });
 
 const updateTestSchema = createTestSchema.partial();
@@ -53,6 +55,13 @@ const createQuestionSchema = z.object({
   hint: z.string().optional(),
   officialExplanation: z.string().optional(),
   orderIndex: z.number().int().min(0).optional(),
+  promptHi: z.string().optional().nullable(),
+  optionAHi: z.string().optional().nullable(),
+  optionBHi: z.string().optional().nullable(),
+  optionCHi: z.string().optional().nullable(),
+  optionDHi: z.string().optional().nullable(),
+  hintHi: z.string().optional().nullable(),
+  officialExplanationHi: z.string().optional().nullable(),
 });
 
 const updateQuestionSchema = createQuestionSchema.partial();
@@ -96,6 +105,8 @@ function mapTestAdmin(row) {
     questionCount: row.question_count || 0,
     tenantId: row.tenant_id ?? null,
     tenantName: row.tenant_name ?? null,
+    generalInstructions: row.general_instructions ?? null,
+    generalInstructionsHi: row.general_instructions_hi ?? null,
   };
 }
 
@@ -137,6 +148,13 @@ function mapQuestionAdmin(row) {
     hint: row.hint,
     officialExplanation: row.official_explanation,
     orderIndex: row.order_index,
+    promptHi: row.prompt_hi ?? null,
+    optionAHi: row.option_a_hi ?? null,
+    optionBHi: row.option_b_hi ?? null,
+    optionCHi: row.option_c_hi ?? null,
+    optionDHi: row.option_d_hi ?? null,
+    hintHi: row.hint_hi ?? null,
+    officialExplanationHi: row.official_explanation_hi ?? null,
   };
 }
 
@@ -366,11 +384,20 @@ adminRouter.post("/tests", auditCreate('test'), async (req, res, next) => {
 
     const { rows } = await pool.query(
       `
-      INSERT INTO tests (title, description, duration_seconds, topic, is_active, tenant_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO tests (title, description, duration_seconds, topic, is_active, tenant_id, general_instructions, general_instructions_hi)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id
     `,
-      [data.title, data.description || null, data.durationSeconds, data.topic, data.isActive, tenantIdVal]
+      [
+        data.title,
+        data.description || null,
+        data.durationSeconds,
+        data.topic,
+        data.isActive,
+        tenantIdVal,
+        data.generalInstructions ?? null,
+        data.generalInstructionsHi ?? null,
+      ]
     );
 
     const view = await fetchTestAdminView(rows[0].id);
@@ -442,6 +469,14 @@ adminRouter.put("/tests/:id", captureOldData('test'), auditUpdate('test'), async
       }
       updates.push(`tenant_id = $${paramIndex++}`);
       values.push(nextTenantId);
+    }
+    if (data.generalInstructions !== undefined) {
+      updates.push(`general_instructions = $${paramIndex++}`);
+      values.push(data.generalInstructions);
+    }
+    if (data.generalInstructionsHi !== undefined) {
+      updates.push(`general_instructions_hi = $${paramIndex++}`);
+      values.push(data.generalInstructionsHi);
     }
 
     if (updates.length === 0) {
@@ -599,16 +634,22 @@ adminRouter.post("/tests/:testId/questions", auditCreate('question'), async (req
       orderIndex = maxOrder.rows[0].next_order;
     }
     
+    const trimOrNull = (v) =>
+      v != null && String(v).trim() !== "" ? String(v).trim() : null;
     const { rows } = await pool.query(`
       INSERT INTO questions (
         test_id, prompt, option_a, option_b, option_c, option_d, 
-        correct_option, subject, hint, official_explanation, order_index
+        correct_option, subject, hint, official_explanation, order_index,
+        prompt_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, hint_hi, official_explanation_hi
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `, [
       testId, data.prompt, data.optionA, data.optionB, data.optionC, data.optionD,
-      data.correctOption, data.subject, data.hint || null, data.officialExplanation || null, orderIndex
+      data.correctOption, data.subject, data.hint || null, data.officialExplanation || null, orderIndex,
+      trimOrNull(data.promptHi), trimOrNull(data.optionAHi), trimOrNull(data.optionBHi),
+      trimOrNull(data.optionCHi), trimOrNull(data.optionDHi), trimOrNull(data.hintHi),
+      trimOrNull(data.officialExplanationHi),
     ]);
     
     res.status(201).json(mapQuestionAdmin(rows[0]));
@@ -651,19 +692,36 @@ adminRouter.put("/questions/:id", captureOldData('question'), auditUpdate('quest
     const values = [];
     let paramIndex = 1;
     
+    const trimOrNull = (v) =>
+      v != null && String(v).trim() !== "" ? String(v).trim() : null;
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined) {
-        const dbColumn = key === 'optionA' ? 'option_a' :
-                        key === 'optionB' ? 'option_b' :
-                        key === 'optionC' ? 'option_c' :
-                        key === 'optionD' ? 'option_d' :
-                        key === 'correctOption' ? 'correct_option' :
-                        key === 'officialExplanation' ? 'official_explanation' :
-                        key === 'orderIndex' ? 'order_index' :
-                        key;
-        
+        const dbColumn =
+          key === "optionA" ? "option_a" :
+          key === "optionB" ? "option_b" :
+          key === "optionC" ? "option_c" :
+          key === "optionD" ? "option_d" :
+          key === "correctOption" ? "correct_option" :
+          key === "officialExplanation" ? "official_explanation" :
+          key === "orderIndex" ? "order_index" :
+          key === "promptHi" ? "prompt_hi" :
+          key === "optionAHi" ? "option_a_hi" :
+          key === "optionBHi" ? "option_b_hi" :
+          key === "optionCHi" ? "option_c_hi" :
+          key === "optionDHi" ? "option_d_hi" :
+          key === "hintHi" ? "hint_hi" :
+          key === "officialExplanationHi" ? "official_explanation_hi" :
+          key;
+        const isHiText =
+          key === "promptHi" ||
+          key === "optionAHi" ||
+          key === "optionBHi" ||
+          key === "optionCHi" ||
+          key === "optionDHi" ||
+          key === "hintHi" ||
+          key === "officialExplanationHi";
         updates.push(`${dbColumn} = $${paramIndex++}`);
-        values.push(value);
+        values.push(isHiText ? trimOrNull(value) : value);
       }
     });
     
@@ -862,6 +920,54 @@ adminRouter.put("/users/:id", async (req, res, next) => {
   }
 });
 
+// Delete user (cascades attempts, practice, personal mocks, etc.)
+adminRouter.delete(
+  "/users/:id",
+  captureOldData("user"),
+  auditDelete("user"),
+  async (req, res, next) => {
+    try {
+      const targetId = req.params.id;
+      if (targetId === req.userId) {
+        throw new HttpError(400, "You cannot delete your own account");
+      }
+
+      const { rows: targetRows } = await pool.query(
+        `SELECT id, role FROM users WHERE id = $1`,
+        [targetId]
+      );
+      if (targetRows.length === 0) {
+        throw new HttpError(404, "User not found");
+      }
+
+      if (targetRows[0].role === "admin") {
+        const { rows: cnt } = await pool.query(
+          `SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin'`
+        );
+        if (cnt[0].n <= 1) {
+          throw new HttpError(400, "Cannot delete the only admin account");
+        }
+      }
+
+      const { rowCount } = await pool.query(`DELETE FROM users WHERE id = $1`, [
+        targetId,
+      ]);
+      if (rowCount === 0) {
+        throw new HttpError(404, "User not found");
+      }
+
+      logWarn({
+        msg: "admin_user_deleted",
+        adminUserId: req.userId,
+        deletedUserId: targetId,
+      });
+      res.json({ message: "User deleted", id: targetId });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 // ============================================================================
 // BULK IMPORT
 // ============================================================================
@@ -874,9 +980,7 @@ adminRouter.get("/import/template", (req, res) => {
   res.send(template);
 });
 
-// Import questions from CSV file
-// In dev (REDIS_URL unreachable or NODE_ENV=development) runs synchronously.
-// In prod with working Redis, queues an async job.
+// Import questions from CSV file (synchronous — no BullMQ; worker is not required).
 adminRouter.post("/import/questions/:testId", upload.single("csvFile"), async (req, res, next) => {
   try {
     const testId = req.params.testId;
@@ -899,7 +1003,7 @@ adminRouter.post("/import/questions/:testId", upload.single("csvFile"), async (r
 });
 
 
-// Import questions from raw CSV text (for testing/API clients)
+// Import questions from raw CSV text (same synchronous path as multipart upload).
 adminRouter.post("/import/questions/:testId/text", async (req, res, next) => {
   try {
     const testId = req.params.testId;
@@ -909,31 +1013,9 @@ adminRouter.post("/import/questions/:testId/text", async (req, res, next) => {
       })
       .parse(req.body);
 
-    if (!process.env.REDIS_URL) {
-      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
-    }
-
-    let queue;
-    try {
-      queue = getImportQueue();
-    } catch {
-      throw new HttpError(503, "Import queue unavailable (configure REDIS_URL and run the worker)");
-    }
-    const job = await queue.add(
-      "import",
-      { userId: req.userId, testId, csvText },
-      {
-        removeOnComplete: 200,
-        removeOnFail: 100,
-        attempts: 1,
-      }
-    );
-    const jobId = String(job.id);
-    res.status(202).json({
-      jobId,
-      status: "queued",
-      statusUrl: `/api/jobs/${jobId}`,
-    });
+    const { importQuestionsFromCSV } = await import("../services/importService.js");
+    const result = await importQuestionsFromCSV(testId, csvText, req.userId);
+    return res.status(200).json({ status: "done", ...result });
   } catch (e) {
     next(e);
   }

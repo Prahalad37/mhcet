@@ -3,14 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Library,
+  PenSquare,
   BarChart2,
   User,
   ShieldCheck,
 } from "lucide-react";
 import { getToken } from "@/lib/auth";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 // Routes where the BottomNav must be hidden.
 // The exam engine has its OWN sticky bottom bar — overlapping would be disastrous.
@@ -23,7 +27,7 @@ function shouldHide(pathname: string) {
 interface Tab {
   href: string;
   label: string;
-  icon: React.FC<{ className?: string; "aria-hidden"?: boolean }>;
+  icon: LucideIcon;
   /** Only render this tab when the user is an admin */
   adminOnly?: boolean;
   /** Only render when logged in */
@@ -43,6 +47,12 @@ const TABS: Tab[] = [
     href: "/tests",
     label: "Tests",
     icon: Library,
+    authRequired: true,
+  },
+  {
+    href: "/my-mocks",
+    label: "Mocks",
+    icon: PenSquare,
     authRequired: true,
   },
   {
@@ -66,8 +76,18 @@ const TABS: Tab[] = [
   },
 ];
 
+const tabLabelKeys: Record<string, string> = {
+  "/dashboard": "bottom.home",
+  "/tests": "bottom.tests",
+  "/my-mocks": "bottom.mocks",
+  "/attempts": "bottom.results",
+  "/admin": "bottom.admin",
+  "/login": "bottom.profile",
+};
+
 export function BottomNav() {
   const pathname = usePathname();
+  const { t } = useLocale();
   const [authed, setAuthed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -131,6 +151,9 @@ export function BottomNav() {
         "shadow-[0_-1px_12px_0_rgba(0,0,0,0.06)] dark:shadow-[0_-1px_12px_0_rgba(0,0,0,0.3)]",
       ].join(" ")}
     >
+      <div className="flex justify-center border-b border-zinc-200/50 py-1.5 dark:border-white/10">
+        <LanguageSwitcher compact />
+      </div>
       {/* Safe-area wrapper — this is the element that gets true padding */}
       <div
         className="flex items-stretch justify-around px-1 pt-1.5"
@@ -146,7 +169,7 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              aria-label={tab.label}
+              aria-label={t(tabLabelKeys[tab.href] ?? tab.label)}
               aria-current={active ? "page" : undefined}
               className={[
                 // Minimum iOS tap target: 44×44 pt
@@ -191,7 +214,7 @@ export function BottomNav() {
                     : "text-zinc-400 dark:text-zinc-500",
                 ].join(" ")}
               >
-                {tab.label}
+                {t(tabLabelKeys[tab.href] ?? tab.label)}
               </span>
             </Link>
           );

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* Inter is loaded via next/font/google in app/layout.tsx (avoids invalid mid-file @import after Tailwind output). */
 
 :root {
   --background: #f8f9fc;
@@ -53,7 +53,7 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inter', var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* Prevent content from sliding under the iOS notch/home bar */
@@ -114,6 +114,7 @@ body::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 2.75rem; /* 44px tap target (iOS HIG) */
   border-radius: 0.75rem;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
@@ -200,4 +201,20 @@ body::before {
   .btn-primary:active:not(:disabled) {
     transform: none !important;
   }
+}
+
+/* Focus exam shell — set by take page via document.documentElement.dataset.examUi */
+html[data-exam-ui="focus"] #main-content {
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+}
+@media (min-width: 768px) {
+  html[data-exam-ui="focus"] #main-content {
+    padding-bottom: 1.5rem;
+  }
+}
+html[data-exam-ui="focus"] #site-footer-wrap {
+  display: none;
+}
+html[data-exam-ui="focus"] body::before {
+  opacity: 0.15;
 }

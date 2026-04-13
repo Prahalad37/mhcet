@@ -9,6 +9,11 @@
 
 | Date (UTC) | Change |
 |------------|--------|
+| 2026-04-13 | **Production push checklist:** Local gates run (`frontend` typecheck + lint + build; `backend` tests; `verify:prod-env` with prod-like env). Live **Vercel** home **200**; API **`/health`** verify on deploy host (use current Railway URL from dashboard if hostname changed). README **Deploy checklist** adds **Pre-push from the repo** commands. |
+| 2026-04-13 | **CTO refinement:** Admin CSV **`/text`** import aligned with multipart (**sync** **`importService`**, **200**); README + ROADMAP API table + env docs (**REDIS** = explain only); **`FREE_TESTS_PER_DAY`** defaults to **2** when unset/invalid; **`/health`** + log fields + **`verify:prod-env`** documented for ops; results **next steps** CTAs; roadmap Phase A/B/E refresh. |
+| 2026-04-13 | **Production readiness:** CI runs **`npm run lint`** + **`npm run typecheck`** before **`next build`**; **`next.config`** no longer ignores ESLint/TS build errors. **`npm run typecheck`** (`tsc --noEmit`) in **`frontend/`**. **`/dashboard`** loads **`ScoreHistoryChart`** via **`dynamic(..., { ssr: false })`**; **`ScoreHistoryEmpty`** in **`ScoreHistoryEmpty.tsx`** (no Recharts in empty state). **Markdown:** GFM-only path by default; KaTeX/remark-math loaded only when content matches **`contentNeedsMathMarkdown`**. **`backend/scripts/verifyProductionEnv.js`** + **`npm run verify:prod-env`** (duplicate **`DATABASE_URL`** check, **`JWT_SECRET`** length, prod **`CORS_ORIGIN`** / **`REDIS_URL`** warnings); CI smoke step after backend tests. CSV import **`logInfo`** instead of **`console.log`**. **Pre-deploy QA (manual):** auth, tests flow, i18n toggle, mobile ~360px, throttled network/CPU on dashboard + take, admin CSV — run before prod push. |
+| 2026-04-12 | **Seed:** `npm run seed:blank-mocks` — inserts **five** empty MHCET Law catalog tests (title, description, duration, topic only); idempotent on title. **`--force`** re-creates those five shells. Data: `seedData/mhcetBlankMockShells.js`. |
+| 2026-04-12 | **Admin:** `DELETE /api/admin/users/:id` (audit logged); **student:** `DELETE /api/attempts/:attemptId` + `POST /api/attempts/clear-history`. UI: Admin → Users **Delete**; History → per-row remove + **Clear all history**. |
 | 2026-04-10 | **Take test UX:** **`Submit test`** in **`/tests/[testId]/take`** only shown on the **last question** (reduces accidental submit on mobile); form submit no-ops until then — **timer auto-submit** still calls submit directly. |
 | 2026-04-09 | **Phase 10 — Cleanup (approved scope):** Removed unused **`StaticExplanationModal`**; **`admin`** route **`console.warn`** → **`logWarn`** (structured JSON); **`dev:webpack`** → alias of **`npm run dev`**. |
 | 2026-04-09 | **Phase 9 Step 2 — Exam analytics UI:** **`/results/[attemptId]`** (`app/(exam)/results/[attemptId]/page.tsx`) — **`GET /api/attempts/:id/result`**; hero (**Passed!** / **Needs improvement**), **`recharts`** donut (**emerald** / **rose** / **zinc**), **`glass-card`** metrics, question cards + **`<details>`** explanations; loading skeleton. **`/attempts/:id/results`** → **redirect** to **`/results/:id`**. Types: **`AttemptResultResponse`**. |
@@ -98,6 +103,8 @@
 - [x] **P0/P1 hardening** — immutable result snapshots at submit time, submitted-attempt-safe admin delete behavior, practice score dedupe, auth `next` redirect continuity, DB-backed admin role check, auth-specific rate limiter, explain quota reservation/release flow, and API abort fallback compatibility.
 - [x] **Phase 6 — Tenant-scoped catalog + admin UI** — Backend: student catalog/detail by JWT `tenantId`; admin tests API **`tenantName`** + **`tenantId`**. Frontend: **`/admin/tests`** table, create/edit modals + full-page forms, **`TestTenantSelect`** from **`getTenants()`**.
 - [x] **Phase 7 — B2B white-label** — **`GET /api/auth/me`** + login payload include **`tenantName`**; nav + dashboard copy for institute brand vs PrepMaster.
+- [x] **Production readiness (2026-04)** — CI lint + **`tsc`**, strict Next build, dashboard chart code-split, conditional math markdown chunk, **`verify:prod-env`** script; manual QA matrix documented in Changelog.
+- [x] **CTO refinement (2026-04)** — Sync CSV import on both admin routes; docs/ops (**README**, API table, **`FREE_TESTS_PER_DAY`** default **2**); learner CTAs (results next steps, dashboard copy); roadmap Phase A/B done + Phase E (B2B reporting) stub; admin Users plan-cap copy.
 
 ---
 
@@ -112,21 +119,29 @@
 
 ---
 
-## Phase A — Core product (no admin yet)
+## Phase A — Core product — **largely done** (incremental polish)
 
-1. **Results polish** — Show topic + **analytics snippet** on results page (reuse insights or per-attempt summary).
-2. **In-progress attempts** — List abandoned attempts; **resume same attempt** (needs `GET /api/attempts/:id` for in-progress state + take page `?attemptId=` or dedicated resume route).
-3. **Better empty/error states** — Network, 503, session expiry.
-4. **Content** — More seeded tests; optional import script (JSON/CSV).
+1. ~~**Results polish**~~ — Analytics + topic snippets on **`/results/:id`**; insights block + recommended tests link.
+2. ~~**In-progress attempts**~~ — **`/api/attempts`**, resume via **`GET /api/attempts/:id/resume`** + take **`?attemptId=`**; tests hub shows **Continue**.
+3. **Better empty/error states** — Ongoing: tighten copy for **503** / session expiry on high-traffic flows if telemetry shows confusion.
+4. **Content** — Expand seeded banks / institute-specific CSVs as needed; import is **sync** (see API table).
 
 ---
 
-## Phase B — Admin & content ops
+## Phase B — Admin & content ops — **done**
 
-1. **Role** — `users.role` or `is_admin`; middleware `requireAdmin`.
-2. **CRUD** — Tests, questions, topics; activate/deactivate tests.
-3. **Bulk import** — CSV → questions with validation.
-4. **Audit** — Who changed what (lightweight `updated_at` / `edited_by` optional).
+1. ~~**Role**~~ — **`users.role`**, **`requireAdmin`**.
+2. ~~**CRUD**~~ — Tests, questions, topics; activate/deactivate; **My Mocks** for authors.
+3. ~~**Bulk import**~~ — CSV → questions (**sync** **`importService`**); template download.
+4. ~~**Audit**~~ — **`audit_logs`** + admin viewer.
+
+---
+
+## Phase E — B2B growth (next slice)
+
+1. **Cohort reporting** — Per-tenant aggregates: attempts started/completed, avg accuracy (admin or tenant-scoped export).
+2. **CSV export** — Submitted attempts summary for a date range (institute ops).
+3. **Tenant onboarding** — Short runbook: assign users to tenant, publish tests with **`tenant_id`**, who to contact for support (README or this doc).
 
 ---
 
@@ -186,8 +201,8 @@
 | PUT | `/api/admin/users/:id` | Admin: set **`tenantId`** or **`tenant_id`** (UUID, **`null`**, or **`""`** to clear) — B2B assignment |
 | PUT | `/api/admin/users/:id/role` | Admin: change user role |
 | GET | `/api/admin/import/template` | Admin: download CSV template |
-| POST | `/api/admin/import/questions/:testId` | Admin: enqueue CSV import — **202** + `jobId`; poll **`GET /api/jobs/:id`** |
-| POST | `/api/admin/import/questions/:testId/text` | Same (raw CSV text); **202** + poll |
+| POST | `/api/admin/import/questions/:testId` | Admin: **sync** CSV import (multipart) — **200** `{ status: "done", imported, … }` |
+| POST | `/api/admin/import/questions/:testId/text` | Same **`importService`** path (JSON `{ csvText }`) — **200** `{ status: "done", … }` |
 | GET | `/api/jobs/:jobId` | Job status + `result` / `error` (owner-only) |
 | GET | `/api/audit/logs` | Admin: audit logs with pagination |
 | POST | `/api/explain` | Enqueue AI explanation — **202** + `jobId`; poll **`GET /api/jobs/:id`** |

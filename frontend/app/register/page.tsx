@@ -8,8 +8,10 @@ import { setToken } from "@/lib/auth";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 function RegisterForm() {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -39,16 +41,14 @@ function RegisterForm() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
-          setError(
-            "An account with this email already exists. Try logging in instead."
-          );
+          setError(t("register.err409"));
         } else {
           setError(err.message);
         }
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Registration failed");
+        setError(t("register.failed"));
       }
     } finally {
       setLoading(false);
@@ -56,18 +56,18 @@ function RegisterForm() {
   }
 
   return (
-    <div className="mx-auto max-w-sm space-y-6">
+    <div className="mx-auto w-full max-w-sm space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Create your account
+          {t("register.title")}
         </h1>
         <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-          Already have access?{" "}
+          {t("register.subtitle")}{" "}
           <Link
             href="/login"
             className="font-semibold text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
           >
-            Log in
+            {t("register.loginLink")}
           </Link>
         </p>
       </div>
@@ -77,7 +77,7 @@ function RegisterForm() {
         className="glass-card space-y-4 p-6"
       >
         <Input
-          label="Email"
+          label={t("register.email")}
           type="email"
           autoComplete="email"
           required
@@ -85,7 +85,7 @@ function RegisterForm() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <Input
-          label="Password (min. 8 characters)"
+          label={t("register.passwordMin")}
           type="password"
           autoComplete="new-password"
           required
@@ -96,18 +96,23 @@ function RegisterForm() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full !py-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {loading ? "Creating account…" : "Sign up free →"}
+          {loading ? t("register.loading") : t("register.signUpFree")}
         </button>
       </form>
     </div>
   );
 }
 
+function RegisterSuspenseFallback() {
+  const { t } = useLocale();
+  return <PageLoadingState label={t("common.loading")} />;
+}
+
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<PageLoadingState label="Loading" />}>
+    <Suspense fallback={<RegisterSuspenseFallback />}>
       <RegisterForm />
     </Suspense>
   );

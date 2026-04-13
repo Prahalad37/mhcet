@@ -25,6 +25,9 @@ export type TestDetail = {
   description: string | null;
   durationSeconds: number;
   topic: string;
+  /** Markdown; optional Hindi variant for HI UI. */
+  generalInstructions: string | null;
+  generalInstructionsHi: string | null;
   questions: QuestionPublic[];
 };
 
@@ -226,6 +229,8 @@ export type AdminTest = {
   tenantId?: string | null;
   /** From `GET /api/admin/tests` (joined `tenants.name`). */
   tenantName?: string | null;
+  generalInstructions?: string | null;
+  generalInstructionsHi?: string | null;
 };
 
 export type AdminQuestion = {

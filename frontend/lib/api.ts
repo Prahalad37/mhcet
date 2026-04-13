@@ -1,5 +1,6 @@
 import { getToken } from "./auth";
 import { getApiBaseUrl } from "./apiBaseUrl";
+import { readStoredLocale } from "./localeStorage";
 import { toastErrorSafe } from "./sonnerToast";
 
 const baseUrl = getApiBaseUrl();
@@ -149,6 +150,9 @@ export async function api<T>(path: string, options: FetchOptions = {}): Promise<
   if (!skipAuth) {
     const token = getToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
+  }
+  if (typeof window !== "undefined") {
+    headers.set("X-Content-Language", readStoredLocale());
   }
 
   const url = `${baseUrl}${path}`;

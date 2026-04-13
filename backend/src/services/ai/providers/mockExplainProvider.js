@@ -32,6 +32,9 @@ export function generateMockExplanation(row, block) {
   const seed = `${block}::${row.correct_option}`;
   const answer = `The correct option is **${row.correct_option}** — it best matches the stem and distractors.`;
 
+  const sel = row.user_selected != null ? String(row.user_selected).trim().toUpperCase() : "";
+  const wrongPick = sel && sel !== String(row.correct_option).trim().toUpperCase() && /^[ABCD]$/.test(sel);
+
   const explainTemplates = [
     `Walk through the stem: identify what is being asked, eliminate options that contradict the rule or facts, and confirm that option ${row.correct_option} fits the narrowest accurate reading.`,
     `Start by mapping the question to the underlying rule. Compare each option against that rule; only ${row.correct_option} remains consistent with the stated facts.`,
@@ -48,7 +51,10 @@ export function generateMockExplanation(row, block) {
     "Underline the operative phrase in the prompt — mismatches there usually kill two options immediately.",
   ];
 
-  const explanation = pickParagraph(seed + ":e", explainTemplates);
+  let explanation = pickParagraph(seed + ":e", explainTemplates);
+  if (wrongPick) {
+    explanation += ` **Why option ${sel} tempts students:** it often sounds plausible because it shares surface features with the right idea, but it misses the precise element the stem tests (timing, scope, or exception). Re-read the operative words in the question and match them to the rule—then ${row.correct_option} is the only option that fits exactly.`;
+  }
   const concept = pickParagraph(seed + ":c", conceptTemplates);
   const example = pickParagraph(seed + ":x", exampleTemplates);
 

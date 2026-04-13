@@ -1,12 +1,22 @@
-import type { HTMLAttributes, ImgHTMLAttributes } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
-import rehypeKatex from 'rehype-katex';
+"use client";
+
+import dynamic from "next/dynamic";
+import { contentNeedsMathMarkdown } from "@/lib/markdownMathDetection";
+import { MarkdownRendererLight } from "./MarkdownRendererLight";
+
+const MarkdownMathBody = dynamic(() => import("./MarkdownRendererMath"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="min-h-[3rem] animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800"
+      aria-busy
+      aria-label="Loading formatted content"
+    />
+  ),
+});
 
 interface MarkdownRendererProps {
   content: string;
-  /** Override prose sizing (default: compact body text). */
   className?: string;
 }
 
@@ -14,37 +24,12 @@ export function MarkdownRenderer({
   content,
   className = "prose prose-sm max-w-none dark:prose-invert",
 }: MarkdownRendererProps) {
+  if (!contentNeedsMathMarkdown(content)) {
+    return <MarkdownRendererLight content={content} className={className} />;
+  }
   return (
     <div className={className}>
-      <ReactMarkdown
-        remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[rehypeKatex]}
-        components={{
-          img: (raw) => {
-            const { node, ...props } = raw as {
-              node?: unknown;
-            } & ImgHTMLAttributes<HTMLImageElement>;
-            void node;
-            return (
-              <img
-                {...props}
-                alt={props.alt ?? ""}
-                className="mb-4 mt-2 max-w-full rounded-md"
-                loading="lazy"
-              />
-            );
-          },
-          p: (raw) => {
-            const { node, ...props } = raw as {
-              node?: unknown;
-            } & HTMLAttributes<HTMLParagraphElement>;
-            void node;
-            return <p className="mb-2 last:mb-0" {...props} />;
-          },
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+      <MarkdownMathBody content={content} />
     </div>
   );
 }

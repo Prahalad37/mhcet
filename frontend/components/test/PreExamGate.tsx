@@ -4,21 +4,30 @@ import { useEffect, useMemo, useState } from "react";
 import type { TestDetail } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
-function formatDuration(seconds: number): string {
+function formatDuration(
+  seconds: number,
+  tr: (k: string, v?: Record<string, string | number>) => string
+): string {
   const mins = Math.round(seconds / 60);
   if (mins >= 60) {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return m ? `${h} hr ${m} min` : `${h} hr`;
+    return m ? tr("pre.durationHrMin", { h, m }) : tr("pre.durationHr", { h });
   }
-  return `${mins} minutes`;
+  return tr("pre.durationMinutes", { mins });
 }
 
-function subjectBreakdown(questions: TestDetail["questions"]) {
+function subjectBreakdown(
+  questions: TestDetail["questions"],
+  generalLabel: string
+) {
   const map = new Map<string, number>();
   for (const q of questions) {
-    const label = (q.subject && String(q.subject).trim()) || "General";
+    const label = (q.subject && String(q.subject).trim()) || generalLabel;
     map.set(label, (map.get(label) ?? 0) + 1);
   }
   return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
@@ -32,10 +41,25 @@ type Props = {
 };
 
 export function PreExamGate({ test, onBack, onStart, starting }: Props) {
+  const { locale, t: tr } = useLocale();
   const [modeOpen, setModeOpen] = useState(false);
   const [fsHint, setFsHint] = useState<string | null>(null);
-  const rows = useMemo(() => subjectBreakdown(test.questions), [test.questions]);
+  const rows = useMemo(
+    () => subjectBreakdown(test.questions, tr("pre.generalSubject")),
+    [test.questions, tr]
+  );
   const total = test.questions.length;
+
+  const customInstructionsMd = useMemo(() => {
+    const en = test.generalInstructions?.trim() ?? "";
+    const hi = test.generalInstructionsHi?.trim() ?? "";
+    if (locale === "hi") {
+      if (hi) return hi;
+      if (en) return en;
+      return null;
+    }
+    return en || null;
+  }, [locale, test.generalInstructions, test.generalInstructionsHi]);
 
   useEffect(() => {
     if (!fsHint) return;
@@ -48,7 +72,7 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
       await document.documentElement.requestFullscreen();
       setFsHint(null);
     } catch {
-      setFsHint("Fullscreen was blocked or isn’t supported—you can continue without it.");
+      setFsHint(tr("pre.fsBlocked"));
     }
   }
 
@@ -57,7 +81,7 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
       <header className="sticky top-2 z-20 flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white/95 p-3 shadow-sm backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
           <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">
-            PrepMaster
+            {tr("pre.brand")}
           </span>
           <span
             className="min-w-0 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50"
@@ -68,11 +92,12 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <span className="rounded-lg bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200">
-            Timer off — choose mode to begin
+            {tr("pre.timerOff")}
           </span>
           <span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-950 dark:border-amber-800/70 dark:bg-amber-950/50 dark:text-amber-100">
-            {formatDuration(test.durationSeconds)}
+            {formatDuration(test.durationSeconds, tr)}
           </span>
+          <LanguageSwitcher compact />
           <Button
             type="button"
             variant="secondary"
@@ -81,7 +106,7 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
             className="!py-1.5"
             onClick={() => void requestFullscreenOptional()}
           >
-            Enter fullscreen
+            {tr("pre.enterFullscreen")}
           </Button>
         </div>
       </header>
@@ -94,13 +119,11 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
 
       <div className="rounded-2xl border border-sky-200/90 bg-sky-50/90 px-4 py-3 text-sm text-sky-950 dark:border-sky-900/50 dark:bg-sky-950/35 dark:text-sky-100">
         <p>
-          <span className="font-semibold">Heads up: </span>
-          The countdown starts only after you pick Normal or Focus. This is a{" "}
-          <span className="font-medium">practice mock</span>
-          —not a camera-proctored exam.
+          <span className="font-semibold">{tr("pre.headsUp")} </span>
+          {tr("pre.headsUpBody")}
         </p>
         <p className="mt-2 text-xs text-sky-900/85 dark:text-sky-200/90">
-          Topic tag: {test.topic}
+          {tr("pre.topicTag")} {test.topic}
         </p>
       </div>
 
@@ -109,54 +132,66 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
       ) : null}
 
       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        General instructions
+        {tr("pre.generalInstructions")}
       </p>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          Question palette (during the mock)
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          The palette uses the same cues as the live test screen:
-        </p>
-        <ul className="mt-3 list-inside list-disc space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">
-          <li>
-            <span className="font-medium text-sky-700 dark:text-sky-300">
-              Sky / blue highlight
-            </span>{" "}
-            — Answered
-          </li>
-          <li>
-            <span className="font-medium text-zinc-800 dark:text-zinc-200">
-              Outlined / visited
-            </span>{" "}
-            — Seen, not answered yet
-          </li>
-          <li>
-            <span className="font-medium text-amber-700 dark:text-amber-300">
-              Amber ring
-            </span>{" "}
-            — Marked for review
-          </li>
-          <li>
-            <span className="font-medium text-sky-600 dark:text-sky-400">
-              Strong ring
-            </span>{" "}
-            — Current question
-          </li>
-        </ul>
-      </section>
+      {customInstructionsMd ? (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
+          <MarkdownRenderer
+            content={customInstructionsMd}
+            className="prose prose-sm max-w-none text-zinc-800 dark:prose-invert dark:text-zinc-200"
+          />
+        </section>
+      ) : (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            {tr("pre.paletteTitle")}
+          </h2>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            {tr("pre.paletteIntro")}
+          </p>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            {tr("pre.paletteGrouping")}
+          </p>
+          <ul className="mt-3 list-inside list-disc space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+            <li>
+              <span className="font-medium text-sky-700 dark:text-sky-300">
+                {tr("pre.legendSky")}
+              </span>{" "}
+              — {tr("pre.legendAnswered")}
+            </li>
+            <li>
+              <span className="font-medium text-zinc-800 dark:text-zinc-200">
+                {tr("pre.legendOutlined")}
+              </span>{" "}
+              — {tr("pre.legendSeenDesc")}
+            </li>
+            <li>
+              <span className="font-medium text-amber-700 dark:text-amber-300">
+                {tr("pre.legendAmber")}
+              </span>{" "}
+              — {tr("pre.legendMarked")}
+            </li>
+            <li>
+              <span className="font-medium text-sky-600 dark:text-sky-400">
+                {tr("pre.legendStrong")}
+              </span>{" "}
+              — {tr("pre.legendCurrentQ")}
+            </li>
+          </ul>
+        </section>
+      )}
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          Paper structure
+          {tr("pre.paperStructure")}
         </h2>
         <div className="mt-3 overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
           <table className="w-full min-w-[280px] text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
-                <th className="px-4 py-3">Section / subject</th>
-                <th className="px-4 py-3 text-right">Questions</th>
+                <th className="px-4 py-3">{tr("pre.colSection")}</th>
+                <th className="px-4 py-3 text-right">{tr("pre.colQuestions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -167,7 +202,7 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
                 </tr>
               ))}
               <tr className="bg-zinc-50 font-semibold text-zinc-900 dark:bg-zinc-900 dark:text-zinc-50">
-                <td className="px-4 py-2.5">Total</td>
+                <td className="px-4 py-2.5">{tr("pre.totalRow")}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{total}</td>
               </tr>
             </tbody>
@@ -175,47 +210,24 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          Answering &amp; navigation
-        </h2>
-        <ol className="mt-3 list-inside list-decimal space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <li>
-            Tap an option (A–D) to select. You can change your choice anytime before
-            submitting the whole test.
-          </li>
-          <li>
-            Use <strong>Next</strong> and <strong>Previous</strong> to move between
-            questions, or jump from the question palette.
-          </li>
-          <li>
-            Use <strong>Mark for review</strong> to flag a question (keyboard{" "}
-            <kbd className="rounded border border-zinc-300 px-1 font-mono text-xs dark:border-zinc-600">
-              M
-            </kbd>
-            ).
-          </li>
-          <li>
-            Answers sync in the background. Wait for the timer; when time ends, your
-            attempt submits automatically.
-          </li>
-          <li>
-            On the live screen:{" "}
-            <kbd className="rounded border border-zinc-300 px-1 font-mono text-xs dark:border-zinc-600">
-              ←
-            </kbd>{" "}
-            /{" "}
-            <kbd className="rounded border border-zinc-300 px-1 font-mono text-xs dark:border-zinc-600">
-              →
-            </kbd>{" "}
-            move between questions.
-          </li>
-        </ol>
-      </section>
+      {!customInstructionsMd ? (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            {tr("pre.answeringTitle")}
+          </h2>
+          <ol className="mt-3 list-inside list-decimal space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+            <li>{tr("pre.ans1")}</li>
+            <li>{tr("pre.ans2")}</li>
+            <li>{tr("pre.ans3")}</li>
+            <li>{tr("pre.ans4")}</li>
+            <li>{tr("pre.ans5")}</li>
+          </ol>
+        </section>
+      ) : null}
 
       <div className="flex flex-col-reverse gap-3 pb-8 sm:flex-row sm:items-center sm:justify-between">
         <Button type="button" variant="ghost" onClick={onBack} disabled={starting}>
-          Back to tests
+          {tr("pre.backTests")}
         </Button>
         <Button
           type="button"
@@ -223,7 +235,7 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
           disabled={starting || total === 0}
           onClick={() => setModeOpen(true)}
         >
-          Next — choose mode &amp; start →
+          {tr("pre.nextChooseMode")}
         </Button>
       </div>
 
@@ -232,23 +244,20 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
         onClose={() => {
           if (!starting) setModeOpen(false);
         }}
-        title="Choose your preferred mode"
-        subtitle={
-          <span>
-            Pick how focused you want the environment. PrepMaster does not record
-            camera or audio; &quot;Focus&quot; mode only helps you stay in fullscreen
-            and surfaces stronger reminders if you leave the tab.
-          </span>
-        }
+        title={tr("pre.modalTitle")}
+        subtitle={<span>{tr("pre.modalSubtitle")}</span>}
         wide
         bodyClassName="!py-4"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-            <p className="font-semibold text-zinc-900 dark:text-zinc-50">Normal mode</p>
+            <p className="font-semibold text-zinc-900 dark:text-zinc-50">{tr("pre.normalTitle")}</p>
             <ul className="mt-2 flex-1 list-inside list-disc space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
-              <li>Standard mock experience</li>
-              <li>Flexible — switch tabs if you need to</li>
+              {tr("pre.normalBullets")
+                .split("|")
+                .map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
             </ul>
             <Button
               type="button"
@@ -264,15 +273,17 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
                 }
               }}
             >
-              Normal mode
+              {tr("pre.normalCta")}
             </Button>
           </div>
           <div className="flex flex-col rounded-xl border border-emerald-200/90 bg-emerald-50/50 p-4 dark:border-emerald-800/60 dark:bg-emerald-950/30">
-            <p className="font-semibold text-zinc-900 dark:text-zinc-50">Focus mode</p>
+            <p className="font-semibold text-zinc-900 dark:text-zinc-50">{tr("pre.focusTitle")}</p>
             <ul className="mt-2 flex-1 list-inside list-disc space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
-              <li>Prompts for fullscreen (browser permitting)</li>
-              <li>Stronger on-screen reminder if you leave this tab</li>
-              <li>Best when practising serious exam discipline</li>
+              {tr("pre.focusBullets")
+                .split("|")
+                .map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
             </ul>
             <Button
               type="button"
@@ -287,13 +298,13 @@ export function PreExamGate({ test, onBack, onStart, starting }: Props) {
                 }
               }}
             >
-              Focus mode
+              {tr("pre.focusCta")}
             </Button>
           </div>
         </div>
         {starting ? (
           <p className="mt-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Starting test…
+            {tr("pre.starting")}
           </p>
         ) : null}
       </Modal>

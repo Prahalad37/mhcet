@@ -1,25 +1,14 @@
 import { Router } from "express";
 import { pool } from "../db/pool.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { getContentLang } from "../utils/contentLocale.js";
+import {
+  mapQuestionRowToPublic,
+  QUESTION_ROW_SELECT,
+} from "../utils/questionLocale.js";
 
 export const testsRouter = Router();
 testsRouter.use(authMiddleware);
-
-function mapQuestionPublic(row) {
-  const out = {
-    id: row.id,
-    prompt: row.prompt,
-    optionA: row.option_a,
-    optionB: row.option_b,
-    optionC: row.option_c,
-    optionD: row.option_d,
-    orderIndex: row.order_index,
-  };
-  if (row.subject != null) {
-    out.subject = row.subject;
-  }
-  return out;
-}
 
 testsRouter.get("/", async (req, res, next) => {
   try {
@@ -70,7 +59,7 @@ testsRouter.get("/", async (req, res, next) => {
 testsRouter.get("/my", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT t.id, t.title, t.description, t.duration_seconds, t.topic, t.created_at,
+      `SELECT t.id, t.title, t.description, t.duration_seconds, t.topic, t.created_at, t.is_active,
               COUNT(q.id)::int AS question_count
        FROM tests t
        LEFT JOIN questions q ON q.test_id = t.id
@@ -87,6 +76,7 @@ testsRouter.get("/my", async (req, res, next) => {
         durationSeconds: r.duration_seconds,
         topic: r.topic,
         questionCount: r.question_count,
+        isActive: r.is_active,
         authorId: req.userId,
         createdAt: r.created_at,
       }))
@@ -126,7 +116,7 @@ testsRouter.get("/:testId", async (req, res, next) => {
     }
 
     const testRes = await pool.query(
-      `SELECT id, title, description, duration_seconds, topic FROM tests t ${accessSql}`,
+      `SELECT id, title, description, duration_seconds, topic, general_instructions, general_instructions_hi FROM tests t ${accessSql}`,
       params
     );
     const test = testRes.rows[0];
@@ -134,17 +124,20 @@ testsRouter.get("/:testId", async (req, res, next) => {
       return res.status(404).json({ error: "Test not found" });
     }
     const qRes = await pool.query(
-      `SELECT id, prompt, option_a, option_b, option_c, option_d, order_index, subject
+      `SELECT ${QUESTION_ROW_SELECT}
        FROM questions WHERE test_id = $1 ORDER BY order_index ASC, id ASC`,
       [testId]
     );
+    const lang = getContentLang(req);
     res.json({
       id: test.id,
       title: test.title,
       description: test.description,
       durationSeconds: test.duration_seconds,
       topic: test.topic,
-      questions: qRes.rows.map(mapQuestionPublic),
+      generalInstructions: test.general_instructions ?? null,
+      generalInstructionsHi: test.general_instructions_hi ?? null,
+      questions: qRes.rows.map((r) => mapQuestionRowToPublic(r, lang)),
     });
   } catch (e) {
     next(e);
@@ -211,7 +204,10 @@ testsRouter.patch("/:testId/questions/reorder", async (req, res, next) => {
 testsRouter.post("/:testId/questions", async (req, res, next) => {
   try {
     const testId = req.params.testId;
-    const { prompt, optionA, optionB, optionC, optionD, correctOption, subject, hint, officialExplanation } = req.body;
+    const {
+      prompt, optionA, optionB, optionC, optionD, correctOption, subject, hint, officialExplanation,
+      promptHi, optionAHi, optionBHi, optionCHi, optionDHi, hintHi, officialExplanationHi,
+    } = req.body;
     
     // Auth check
     const authCheck = await pool.query(`SELECT id FROM tests WHERE id = $1 AND author_id = $2`, [testId, req.userId]);
@@ -225,16 +221,22 @@ testsRouter.post("/:testId/questions", async (req, res, next) => {
       return res.status(400).json({ error: "correctOption must be A, B, C, or D" });
     }
 
+    const trimOrNull = (v) => (v != null && String(v).trim() !== "" ? String(v).trim() : null);
+
     // Insert
     const { rows } = await pool.query(
       `INSERT INTO questions
          (test_id, prompt, option_a, option_b, option_c, option_d,
-          correct_option, subject, hint, official_explanation, order_index)
+          correct_option, subject, hint, official_explanation, order_index,
+          prompt_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, hint_hi, official_explanation_hi)
        SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-         COALESCE((SELECT MAX(order_index) + 1 FROM questions WHERE test_id = $1), 0)
+         COALESCE((SELECT MAX(order_index) + 1 FROM questions WHERE test_id = $1), 0),
+         $11, $12, $13, $14, $15, $16, $17
        RETURNING id`,
       [testId, prompt.trim(), optionA.trim(), optionB.trim(), optionC.trim(), optionD.trim(),
-       correctOption.toUpperCase(), subject.trim(), hint?.trim() || null, officialExplanation?.trim() || null]
+       correctOption.toUpperCase(), subject.trim(), hint?.trim() || null, officialExplanation?.trim() || null,
+       trimOrNull(promptHi), trimOrNull(optionAHi), trimOrNull(optionBHi), trimOrNull(optionCHi), trimOrNull(optionDHi),
+       trimOrNull(hintHi), trimOrNull(officialExplanationHi)]
     );
     res.status(201).json({ id: rows[0].id });
   } catch (e) {
@@ -248,7 +250,9 @@ testsRouter.get("/questions/:id", async (req, res, next) => {
     const { rows } = await pool.query(
       `SELECT q.id, q.prompt, q.option_a, q.option_b, q.option_c, q.option_d,
               q.correct_option, q.subject, q.hint, q.official_explanation, q.order_index,
-              q.test_id
+              q.test_id,
+              q.prompt_hi, q.option_a_hi, q.option_b_hi, q.option_c_hi, q.option_d_hi,
+              q.hint_hi, q.official_explanation_hi
        FROM questions q
        JOIN tests t ON t.id = q.test_id
        WHERE q.id = $1 AND t.author_id = $2`,
@@ -261,6 +265,13 @@ testsRouter.get("/questions/:id", async (req, res, next) => {
       optionC: q.option_c, optionD: q.option_d, correctOption: q.correct_option,
       subject: q.subject, hint: q.hint, officialExplanation: q.official_explanation,
       orderIndex: q.order_index, testId: q.test_id,
+      promptHi: q.prompt_hi ?? null,
+      optionAHi: q.option_a_hi ?? null,
+      optionBHi: q.option_b_hi ?? null,
+      optionCHi: q.option_c_hi ?? null,
+      optionDHi: q.option_d_hi ?? null,
+      hintHi: q.hint_hi ?? null,
+      officialExplanationHi: q.official_explanation_hi ?? null,
     });
   } catch (e) { next(e); }
 });
@@ -325,7 +336,10 @@ testsRouter.delete("/questions/:id", async (req, res, next) => {
 testsRouter.put("/questions/:id", async (req, res, next) => {
   try {
     const questionId = req.params.id;
-    const { prompt, optionA, optionB, optionC, optionD, correctOption, subject, hint, officialExplanation } = req.body;
+    const {
+      prompt, optionA, optionB, optionC, optionD, correctOption, subject, hint, officialExplanation,
+      promptHi, optionAHi, optionBHi, optionCHi, optionDHi, hintHi, officialExplanationHi,
+    } = req.body;
 
     const authCheck = await pool.query(
       `SELECT q.id FROM questions q JOIN tests t ON q.test_id = t.id WHERE q.id = $1 AND t.author_id = $2`,
@@ -336,6 +350,7 @@ testsRouter.put("/questions/:id", async (req, res, next) => {
     const updates = [];
     const values = [];
     let paramIndex = 1;
+    const trimOrNull = (v) => (v != null && String(v).trim() !== "" ? String(v).trim() : null);
     
     if (prompt !== undefined)              { updates.push(`prompt = $${paramIndex++}`);               values.push(prompt.trim()); }
     if (optionA !== undefined)             { updates.push(`option_a = $${paramIndex++}`);             values.push(optionA.trim()); }
@@ -346,6 +361,13 @@ testsRouter.put("/questions/:id", async (req, res, next) => {
     if (subject !== undefined)             { updates.push(`subject = $${paramIndex++}`);              values.push(subject.trim()); }
     if (hint !== undefined)                { updates.push(`hint = $${paramIndex++}`);                 values.push(hint?.trim() || null); }
     if (officialExplanation !== undefined) { updates.push(`official_explanation = $${paramIndex++}`); values.push(officialExplanation?.trim() || null); }
+    if (promptHi !== undefined)            { updates.push(`prompt_hi = $${paramIndex++}`);            values.push(trimOrNull(promptHi)); }
+    if (optionAHi !== undefined)           { updates.push(`option_a_hi = $${paramIndex++}`);          values.push(trimOrNull(optionAHi)); }
+    if (optionBHi !== undefined)           { updates.push(`option_b_hi = $${paramIndex++}`);          values.push(trimOrNull(optionBHi)); }
+    if (optionCHi !== undefined)           { updates.push(`option_c_hi = $${paramIndex++}`);          values.push(trimOrNull(optionCHi)); }
+    if (optionDHi !== undefined)           { updates.push(`option_d_hi = $${paramIndex++}`);          values.push(trimOrNull(optionDHi)); }
+    if (hintHi !== undefined)              { updates.push(`hint_hi = $${paramIndex++}`);               values.push(trimOrNull(hintHi)); }
+    if (officialExplanationHi !== undefined) { updates.push(`official_explanation_hi = $${paramIndex++}`); values.push(trimOrNull(officialExplanationHi)); }
 
     if (updates.length === 0) return res.json({ id: questionId });
     

@@ -45,6 +45,11 @@ export async function pollJob<T>(
     }
 
     if (data.status === "completed") {
+      if (data.result === null || data.result === undefined) {
+        throw new Error(
+          "Job finished but returned no result — check the API worker logs (explain job may have failed silently)."
+        );
+      }
       return data.result as T;
     }
     if (data.status === "failed") {

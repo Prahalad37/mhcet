@@ -7,6 +7,12 @@ import {
   assertCanStartMockAttempt,
   loadUserPlanAndTodayCount,
 } from "../utils/planLimits.js";
+import { getContentLang } from "../utils/contentLocale.js";
+import {
+  mapQuestionRowToPublic,
+  mergeSnapshotRowLocale,
+  QUESTION_ROW_SELECT,
+} from "../utils/questionLocale.js";
 
 export const attemptsRouter = Router();
 attemptsRouter.use(authMiddleware);
@@ -19,18 +25,6 @@ const answerSchema = z.object({
   questionId: z.string().uuid(),
   selectedOption: z.enum(["A", "B", "C", "D"]),
 });
-
-function mapQuestionPublic(row) {
-  return {
-    id: row.id,
-    prompt: row.prompt,
-    optionA: row.option_a,
-    optionB: row.option_b,
-    optionC: row.option_c,
-    optionD: row.option_d,
-    orderIndex: row.order_index,
-  };
-}
 
 /** Map A–D to option body text from a snapshot or question row. */
 function optionTextFromRow(row, letter) {
@@ -114,7 +108,7 @@ attemptsRouter.post("/", async (req, res, next) => {
     const testRow = testRes.rows[0];
 
     const qRes = await pool.query(
-      `SELECT id, prompt, option_a, option_b, option_c, option_d, order_index
+      `SELECT ${QUESTION_ROW_SELECT}
        FROM questions WHERE test_id = $1 ORDER BY order_index ASC, id ASC`,
       [testId]
     );
@@ -130,6 +124,7 @@ attemptsRouter.post("/", async (req, res, next) => {
       [userId, testId, total, dur]
     );
     const attempt = ins.rows[0];
+    const lang = getContentLang(req);
 
     res.status(201).json({
       attemptId: attempt.id,
@@ -140,7 +135,7 @@ attemptsRouter.post("/", async (req, res, next) => {
       endsAt: endsAtIsoFromRow(attempt),
       durationSeconds: dur,
       totalQuestions: total,
-      questions: questions.map(mapQuestionPublic),
+      questions: questions.map((r) => mapQuestionRowToPublic(r, lang)),
     });
   } catch (e) {
     if (e instanceof z.ZodError) {
@@ -250,11 +245,13 @@ attemptsRouter.post("/:attemptId/submit", async (req, res, next) => {
     await client.query(
       `INSERT INTO attempt_question_snapshots (
          attempt_id, question_id, prompt, option_a, option_b, option_c, option_d,
-         correct_option, hint, official_explanation, order_index
+         correct_option, hint, official_explanation, order_index,
+         prompt_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, hint_hi, official_explanation_hi
        )
        SELECT
          $1, q.id, q.prompt, q.option_a, q.option_b, q.option_c, q.option_d,
-         q.correct_option, q.hint, q.official_explanation, q.order_index
+         q.correct_option, q.hint, q.official_explanation, q.order_index,
+         q.prompt_hi, q.option_a_hi, q.option_b_hi, q.option_c_hi, q.option_d_hi, q.hint_hi, q.official_explanation_hi
        FROM questions q
        WHERE q.test_id = $2
        ON CONFLICT (attempt_id, question_id) DO NOTHING`,
@@ -321,7 +318,7 @@ attemptsRouter.get("/:attemptId/resume", async (req, res, next) => {
     }
 
     const qRes = await pool.query(
-      `SELECT id, prompt, option_a, option_b, option_c, option_d, order_index
+      `SELECT ${QUESTION_ROW_SELECT}
        FROM questions WHERE test_id = $1 ORDER BY order_index ASC, id ASC`,
       [row.test_id]
     );
@@ -337,6 +334,7 @@ attemptsRouter.get("/:attemptId/resume", async (req, res, next) => {
     for (const a of ansRes.rows) {
       selections[a.question_id] = a.selected_option;
     }
+    const lang = getContentLang(req);
 
     res.json({
       attemptId: row.id,
@@ -347,7 +345,7 @@ attemptsRouter.get("/:attemptId/resume", async (req, res, next) => {
       endsAt: endsAtIsoFromRow(row),
       durationSeconds: row.duration_seconds,
       totalQuestions: qRes.rows.length,
-      questions: qRes.rows.map(mapQuestionPublic),
+      questions: qRes.rows.map((r) => mapQuestionRowToPublic(r, lang)),
       selections,
     });
   } catch (e) {
@@ -377,8 +375,9 @@ attemptsRouter.get("/:attemptId/results", async (req, res, next) => {
     }
 
     const detail = await pool.query(
-      `SELECT s.question_id AS id, s.prompt, s.option_a, s.option_b, s.option_c, s.option_d,
-              s.correct_option, s.order_index, s.hint, s.official_explanation,
+      `SELECT s.question_id AS id, s.prompt, s.prompt_hi, s.option_a, s.option_a_hi,
+              s.option_b, s.option_b_hi, s.option_c, s.option_c_hi, s.option_d, s.option_d_hi,
+              s.correct_option, s.order_index, s.hint, s.hint_hi, s.official_explanation, s.official_explanation_hi,
               ans.selected_option, ans.is_correct
        FROM attempt_question_snapshots s
        LEFT JOIN answers ans ON ans.question_id = s.question_id AND ans.attempt_id = $1
@@ -386,6 +385,7 @@ attemptsRouter.get("/:attemptId/results", async (req, res, next) => {
        ORDER BY s.order_index ASC, s.question_id ASC`,
       [attemptId]
     );
+    const lang = getContentLang(req);
 
     res.json({
       attemptId: attempt.id,
@@ -394,20 +394,23 @@ attemptsRouter.get("/:attemptId/results", async (req, res, next) => {
       totalQuestions: attempt.total_questions,
       submittedAt: attempt.submitted_at,
       durationSeconds: attempt.duration_seconds,
-      questions: detail.rows.map((r) => ({
-        id: r.id,
-        prompt: r.prompt,
-        optionA: r.option_a,
-        optionB: r.option_b,
-        optionC: r.option_c,
-        optionD: r.option_d,
-        correctOption: r.correct_option,
-        selectedOption: r.selected_option,
-        isCorrect: r.is_correct,
-        orderIndex: r.order_index,
-        hint: r.hint,
-        officialExplanation: r.official_explanation,
-      })),
+      questions: detail.rows.map((r) => {
+        const m = mergeSnapshotRowLocale(r, lang);
+        return {
+          id: m.id,
+          prompt: m.prompt,
+          optionA: m.option_a,
+          optionB: m.option_b,
+          optionC: m.option_c,
+          optionD: m.option_d,
+          correctOption: m.correct_option,
+          selectedOption: m.selected_option,
+          isCorrect: m.is_correct,
+          orderIndex: m.order_index,
+          hint: m.hint,
+          officialExplanation: m.official_explanation,
+        };
+      }),
     });
   } catch (e) {
     next(e);
@@ -442,8 +445,9 @@ attemptsRouter.get("/:attemptId/result", async (req, res, next) => {
     }
 
     const detail = await pool.query(
-      `SELECT s.question_id AS id, s.prompt, s.option_a, s.option_b, s.option_c, s.option_d,
-              s.correct_option, s.order_index, s.official_explanation,
+      `SELECT s.question_id AS id, s.prompt, s.prompt_hi, s.option_a, s.option_a_hi,
+              s.option_b, s.option_b_hi, s.option_c, s.option_c_hi, s.option_d, s.option_d_hi,
+              s.correct_option, s.order_index, s.official_explanation, s.official_explanation_hi,
               ans.selected_option, ans.is_correct
        FROM attempt_question_snapshots s
        LEFT JOIN answers ans ON ans.question_id = s.question_id AND ans.attempt_id = $1
@@ -452,7 +456,8 @@ attemptsRouter.get("/:attemptId/result", async (req, res, next) => {
       [attemptId]
     );
 
-    const rows = detail.rows;
+    const lang = getContentLang(req);
+    const rows = detail.rows.map((r) => mergeSnapshotRowLocale(r, lang));
     const totalQuestions = rows.length;
     let correctAnswers = 0;
     let attempted = 0;
@@ -516,6 +521,41 @@ attemptsRouter.get("/:attemptId/result", async (req, res, next) => {
       passStatus,
       responses,
     });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Delete all attempts for the current user (history + in-progress). */
+attemptsRouter.post("/clear-history", async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const { rowCount } = await pool.query(
+      `DELETE FROM attempts WHERE user_id = $1::uuid`,
+      [userId]
+    );
+    res.json({
+      message: "Attempt history cleared",
+      removed: rowCount,
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Remove one attempt from history (own rows only). Cascades answers & snapshots. */
+attemptsRouter.delete("/:attemptId", async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const { attemptId } = req.params;
+    const { rowCount } = await pool.query(
+      `DELETE FROM attempts WHERE id = $1::uuid AND user_id = $2::uuid`,
+      [attemptId, userId]
+    );
+    if (rowCount === 0) {
+      throw new HttpError(404, "Attempt not found");
+    }
+    res.json({ message: "Removed from your history" });
   } catch (e) {
     next(e);
   }

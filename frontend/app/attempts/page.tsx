@@ -3,15 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { api, ApiError, noErrorToast } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { redirectToLogin } from "@/lib/authRedirect";
 import { getUserErrorMessage } from "@/lib/errorMessages";
+import {
+  clearMyAttemptHistory,
+  deleteMyAttempt,
+} from "@/lib/attemptsApi";
 import { useClientMounted } from "@/lib/useClientMounted";
 import type { AttemptHistoryItem } from "@/lib/types";
+import { Button } from "@/components/ui/Button";
 import { PageEmptyState } from "@/components/ui/PageEmptyState";
 import { PageErrorState } from "@/components/ui/PageErrorState";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
+import { toastErrorSafe, toastSuccessSafe } from "@/lib/sonnerToast";
 
 function formatWhen(iso: string | null) {
   if (!iso) return "—";
@@ -33,6 +40,8 @@ export default function AttemptHistoryPage() {
   const [rows, setRows] = useState<AttemptHistoryItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [clearingAll, setClearingAll] = useState(false);
 
   useEffect(() => {
     if (!mounted) return;
@@ -68,19 +77,83 @@ export default function AttemptHistoryPage() {
     };
   }, [mounted, pathname, reloadTick, router]);
 
+  const handleRemoveOne = async (r: AttemptHistoryItem) => {
+    const label = r.testTitle;
+    if (
+      !confirm(
+        `Remove "${label}" from your history? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(r.attemptId);
+    try {
+      await deleteMyAttempt(r.attemptId);
+      toastSuccessSafe("Removed from history");
+      setReloadTick((v) => v + 1);
+    } catch (e) {
+      toastErrorSafe(
+        getUserErrorMessage(e, { fallback: "Could not remove attempt." })
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (
+      !rows?.length ||
+      !confirm(
+        "Clear all mock attempts (including in-progress)? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+    setClearingAll(true);
+    try {
+      const res = await clearMyAttemptHistory();
+      toastSuccessSafe(
+        res.removed > 0
+          ? `Cleared ${res.removed} attempt(s)`
+          : "No attempts to clear"
+      );
+      setReloadTick((v) => v + 1);
+    } catch (e) {
+      toastErrorSafe(
+        getUserErrorMessage(e, { fallback: "Could not clear history." })
+      );
+    } finally {
+      setClearingAll(false);
+    }
+  };
+
   if (!mounted || !getToken()) {
     return <PageLoadingState label="Checking session" />;
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Attempt history
-        </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          In-progress attempts appear first; then submitted, newest first.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+            Attempt history
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            In-progress attempts appear first; then submitted, newest first.
+          </p>
+        </div>
+        {rows && rows.length > 0 ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={clearingAll || !!deletingId}
+            onClick={() => void handleClearAll()}
+            className="shrink-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40"
+          >
+            {clearingAll ? "Clearing…" : "Clear all history"}
+          </Button>
+        ) : null}
       </div>
       {loading ? <PageLoadingState label="Loading attempt history" /> : null}
       {!loading && error ? (
@@ -108,10 +181,13 @@ export default function AttemptHistoryPage() {
               ? `/tests/${r.testId}/take?attemptId=${r.attemptId}`
               : `/results/${r.attemptId}`;
             return (
-              <li key={r.attemptId}>
+              <li
+                key={r.attemptId}
+                className="flex gap-2 rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+              >
                 <Link
                   href={href}
-                  className="flex flex-col gap-1 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-colors hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex min-w-0 flex-1 flex-col gap-1 p-4 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -147,6 +223,21 @@ export default function AttemptHistoryPage() {
                     </span>
                   </div>
                 </Link>
+                <div className="flex shrink-0 items-center border-l border-zinc-100 pr-2 dark:border-zinc-800">
+                  <button
+                    type="button"
+                    title="Remove from history"
+                    disabled={deletingId === r.attemptId || clearingAll}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleRemoveOne(r);
+                    }}
+                    className="rounded-lg p-3 text-zinc-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                    <span className="sr-only">Remove from history</span>
+                  </button>
+                </div>
               </li>
             );
           })}

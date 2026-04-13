@@ -1,21 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import {
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-import type { TooltipProps } from "recharts";
 import { api, ApiError, noErrorToast } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { redirectToLogin } from "@/lib/authRedirect";
-import { getUserErrorMessage } from "@/lib/errorMessages";
+import {
+  getUserErrorMessage,
+  isAiExplainDailyLimitMessage,
+} from "@/lib/errorMessages";
 import { pollJob } from "@/lib/jobPoll";
 import { useClientMounted } from "@/lib/useClientMounted";
 import type {
@@ -30,20 +25,36 @@ import { PageEmptyState } from "@/components/ui/PageEmptyState";
 import { PageErrorState } from "@/components/ui/PageErrorState";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
 import { AiExplanationModal } from "@/components/results/AiExplanationModal";
+import {
+  COLORS,
+  type PieRow,
+} from "@/components/results/outcomePieData";
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 import { CheckCircle2, CircleHelp, Clock3, Target, XCircle } from "lucide-react";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import type { AppLocale } from "@/lib/localeStorage";
 
-const COLORS = {
-  correct: "#10b981",
-  incorrect: "#f43f5e",
-  unattempted: "#71717a",
-};
+function ChartLoadingFallback() {
+  const { t: tr } = useLocale();
+  return (
+    <div className="flex h-[260px] w-full min-h-[200px] items-center justify-center rounded-xl border border-zinc-200/60 bg-zinc-100/50 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900/40">
+      {tr("results.loadingChart")}
+    </div>
+  );
+}
 
-type PieRow = { name: string; value: number; fill: string };
+const OutcomePieChart = dynamic(
+  () =>
+    import("@/components/results/OutcomePieChart").then((m) => m.OutcomePieChart),
+  {
+    ssr: false,
+    loading: () => <ChartLoadingFallback />,
+  }
+);
 
-function formatSubmittedAt(iso: string): string {
+function formatSubmittedAt(iso: string, locale: AppLocale): string {
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : undefined, {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date(iso));
@@ -60,17 +71,6 @@ function formatDuration(seconds: number): string {
   const h = Math.floor(m / 60);
   const rem = m % 60;
   return rem ? `${h}h ${rem}m` : `${h}h`;
-}
-
-function PieTooltip({ active, payload }: TooltipProps<number, string>) {
-  if (!active || !payload?.length) return null;
-  const row = payload[0].payload as PieRow;
-  return (
-    <div className="rounded-xl border border-zinc-200/80 bg-white/95 px-3 py-2 text-xs shadow-lg backdrop-blur-md dark:border-zinc-700/80 dark:bg-zinc-900/95">
-      <p className="font-semibold text-zinc-900 dark:text-zinc-50">{row.name}</p>
-      <p className="mt-1 tabular-nums text-zinc-600 dark:text-zinc-300">{row.value} questions</p>
-    </div>
-  );
 }
 
 function ResultsAnalyticsSkeleton() {
@@ -107,6 +107,7 @@ function ResultsAnalyticsSkeleton() {
 }
 
 export default function ExamAnalyticsResultsPage() {
+  const { locale, t: tr } = useLocale();
   const params = useParams<{ attemptId: string }>();
   const attemptId = params.attemptId;
   const router = useRouter();
@@ -123,7 +124,7 @@ export default function ExamAnalyticsResultsPage() {
   const [warning, setWarning] = useState<string | null>(null);
   const [aiExplainFor, setAiExplainFor] = useState<{
     label: string;
-    content: AiExplainResult;
+    content: AiExplainResult | null;
   } | null>(null);
   const [aiExplainLoadingId, setAiExplainLoadingId] = useState<string | null>(null);
 
@@ -153,7 +154,9 @@ export default function ExamAnalyticsResultsPage() {
             redirectToLogin(router, { next: pathname });
             return;
           }
-          setError(getUserErrorMessage(e, { fallback: "Could not load results." }));
+          setError(
+            getUserErrorMessage(e, { fallback: tr("results.loadError") })
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -162,7 +165,7 @@ export default function ExamAnalyticsResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [mounted, attemptId, pathname, router, reloadTick]);
+  }, [mounted, attemptId, pathname, router, reloadTick, tr]);
 
   useEffect(() => {
     if (!mounted || !getToken() || !data) return;
@@ -178,7 +181,7 @@ export default function ExamAnalyticsResultsPage() {
         if (!cancelled) {
           setWarning(
             getUserErrorMessage(e, {
-              fallback: "Analytics are temporarily unavailable.",
+              fallback: tr("tests.errAnalytics"),
             })
           );
         }
@@ -187,7 +190,7 @@ export default function ExamAnalyticsResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [mounted, data]);
+  }, [mounted, data, tr]);
 
   async function requestAiExplanation(questionId: string, idx: number) {
     if (!data || aiExplainLoadingId) return;
@@ -204,13 +207,13 @@ export default function ExamAnalyticsResultsPage() {
       });
       const result = await pollJob<AiExplainResult>(jobId);
       setAiExplainFor({
-        label: `Question ${idx + 1}`,
+        label: tr("results.questionN", { n: idx + 1 }),
         content: result,
       });
     } catch (e) {
       setWarning(
         getUserErrorMessage(e, {
-          fallback: "Could not load AI explanation. Is Redis running and the worker started?",
+          fallback: tr("results.aiExplainErr"),
         })
       );
     } finally {
@@ -223,37 +226,37 @@ export default function ExamAnalyticsResultsPage() {
     const rows: PieRow[] = [];
     if (data.correctAnswers > 0) {
       rows.push({
-        name: "Correct",
+        name: tr("pie.correct"),
         value: data.correctAnswers,
         fill: COLORS.correct,
       });
     }
     if (data.incorrectAnswers > 0) {
       rows.push({
-        name: "Incorrect",
+        name: tr("pie.incorrect"),
         value: data.incorrectAnswers,
         fill: COLORS.incorrect,
       });
     }
     if (data.unattempted > 0) {
       rows.push({
-        name: "Unattempted",
+        name: tr("pie.unattempted"),
         value: data.unattempted,
         fill: COLORS.unattempted,
       });
     }
     return rows;
-  }, [data]);
+  }, [data, tr]);
 
   if (!mounted || !getToken()) {
-    return <PageLoadingState label="Checking session" />;
+    return <PageLoadingState label={tr("results.checkingSession")} />;
   }
 
   if (loading) {
     return (
       <div className="space-y-6">
         <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          Loading your report…
+          {tr("results.loading")}
         </p>
         <ResultsAnalyticsSkeleton />
       </div>
@@ -271,20 +274,21 @@ export default function ExamAnalyticsResultsPage() {
             setReloadTick((v) => v + 1);
           }}
           backHref="/tests"
-          backLabel="Back to tests"
+          backLabel={tr("results.retry")}
         />
       );
     }
     return (
       <PageEmptyState
-        message="Results are not available for this attempt yet."
-        actionHref="/attempts"
-        actionLabel="Back to history"
+        message={tr("results.empty")}
+          actionHref="/attempts"
+          actionLabel={tr("results.emptyAction")}
       />
     );
   }
 
   const passed = data.passStatus;
+  const responseRows = Array.isArray(data.responses) ? data.responses : [];
 
   return (
     <div className="space-y-10 pb-12">
@@ -311,19 +315,17 @@ export default function ExamAnalyticsResultsPage() {
                 passed ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
               }`}
             >
-              {passed ? "Passed!" : "Needs improvement"}
+              {passed ? tr("results.passed") : tr("results.needsImprovement")}
             </h1>
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-              {passed
-                ? "You met the benchmark — keep building consistency."
-                : "Accuracy below 40% of all questions — review flagged items below."}
+              {passed ? tr("results.passedSub") : tr("results.failSub")}
             </p>
           </div>
 
           <div className="mx-auto mt-10 grid max-w-2xl grid-cols-2 gap-6 sm:gap-10">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Score
+                {tr("results.score")}
               </p>
               <p className="mt-2 text-4xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50 sm:text-5xl">
                 {data.score}
@@ -334,7 +336,7 @@ export default function ExamAnalyticsResultsPage() {
             </div>
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Accuracy
+                {tr("results.accuracy")}
               </p>
               <p className="mt-2 text-4xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50 sm:text-5xl">
                 {data.accuracy}
@@ -344,7 +346,9 @@ export default function ExamAnalyticsResultsPage() {
           </div>
 
           <p className="mt-8 text-center text-xs text-zinc-500 dark:text-zinc-500">
-            Submitted {formatSubmittedAt(data.submittedAt)}
+            {tr("results.submitted", {
+              date: formatSubmittedAt(data.submittedAt, locale),
+            })}
           </p>
         </div>
       </section>
@@ -353,43 +357,13 @@ export default function ExamAnalyticsResultsPage() {
       <div className="grid gap-8 lg:grid-cols-2 lg:items-stretch">
         <div className="glass-card flex min-h-[300px] flex-col p-6 sm:p-8">
           <h2 className="text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            Outcome split
+            {tr("results.outcomeSplit")}
           </h2>
           <p className="mt-1 text-center text-xs text-zinc-500 dark:text-zinc-400">
-            Correct vs incorrect vs skipped
+            {tr("results.outcomeSub")}
           </p>
           <div className="mt-4 h-[260px] w-full flex-1">
-            {pieData.length === 0 ? (
-              <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-zinc-500">
-                No question data
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={56}
-                    outerRadius={96}
-                    paddingAngle={2}
-                  >
-                    {pieData.map((entry, i) => (
-                      <Cell key={`c-${entry.name}-${i}`} fill={entry.fill} stroke="transparent" />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} />
-                  <Legend
-                    wrapperStyle={{ fontSize: "12px" }}
-                    formatter={(value) => (
-                      <span className="text-zinc-700 dark:text-zinc-300">{value}</span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+            <OutcomePieChart pieData={pieData} />
           </div>
         </div>
 
@@ -397,59 +371,110 @@ export default function ExamAnalyticsResultsPage() {
           <div className="glass-card flex flex-col justify-center p-5">
             <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
               <Target className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="text-xs font-semibold uppercase tracking-wide">Total</span>
+              <span className="text-xs font-semibold uppercase tracking-wide">{tr("results.total")}</span>
             </div>
             <p className="mt-3 text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
               {data.totalQuestions}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">questions in mock</p>
+            <p className="mt-1 text-xs text-zinc-500">{tr("results.totalSub")}</p>
           </div>
           <div className="glass-card flex flex-col justify-center p-5">
             <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" aria-hidden />
-              <span className="text-xs font-semibold uppercase tracking-wide">Attempted</span>
+              <span className="text-xs font-semibold uppercase tracking-wide">{tr("results.attempted")}</span>
             </div>
             <p className="mt-3 text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
               {data.attempted}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">with an option chosen</p>
+            <p className="mt-1 text-xs text-zinc-500">{tr("results.attemptedSub")}</p>
           </div>
           <div className="glass-card flex flex-col justify-center p-5">
             <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
               <Clock3 className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="text-xs font-semibold uppercase tracking-wide">Time taken</span>
+              <span className="text-xs font-semibold uppercase tracking-wide">{tr("results.timeTaken")}</span>
             </div>
             <p className="mt-3 text-2xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
               {formatDuration(data.timeTakenSeconds)}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">allowed {formatDuration(data.durationSeconds)}</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              {tr("results.timeAllowed", {
+                dur: formatDuration(data.durationSeconds),
+              })}
+            </p>
           </div>
           <div className="glass-card flex flex-col justify-center p-5">
             <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
               <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="text-xs font-semibold uppercase tracking-wide">Unattempted</span>
+              <span className="text-xs font-semibold uppercase tracking-wide">{tr("results.unattempted")}</span>
             </div>
             <p className="mt-3 text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
               {data.unattempted}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">left blank</p>
+            <p className="mt-1 text-xs text-zinc-500">{tr("results.unattemptedSub")}</p>
           </div>
         </div>
       </div>
 
-      {warning ? <Alert message={warning} variant="info" /> : null}
+      <section
+        className="glass-card border-indigo-200/60 bg-gradient-to-br from-indigo-50/90 to-white p-5 dark:border-indigo-900/40 dark:from-indigo-950/30 dark:to-zinc-950/80"
+        aria-labelledby="results-next-steps-heading"
+      >
+        <h2
+          id="results-next-steps-heading"
+          className="text-sm font-bold text-zinc-900 dark:text-zinc-50"
+        >
+          {tr("results.nextStepsTitle")}
+        </h2>
+        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+          {tr("results.nextStepsLead")}
+        </p>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Link
+            href="/practice"
+            className="inline-flex items-center justify-center rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50 dark:border-indigo-800 dark:bg-zinc-900 dark:text-indigo-300 dark:hover:bg-indigo-950/50"
+          >
+            {tr("results.nextPractice")}
+          </Link>
+          <Link
+            href="/tests"
+            className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800/80"
+          >
+            {tr("results.nextTests")}
+          </Link>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800/80"
+          >
+            {tr("results.nextDashboard")}
+          </Link>
+        </div>
+      </section>
 
-      {insights && (insights.insightMessage || insights.topicStats.length > 0) ? (
+      {warning ? (
+        <Alert
+          message={warning}
+          variant={
+            isAiExplainDailyLimitMessage(warning)
+              ? "warning"
+              : /analytics/i.test(warning)
+                ? "info"
+                : "error"
+          }
+        />
+      ) : null}
+
+      {insights &&
+      (insights.insightMessage || (insights.topicStats ?? []).length > 0) ? (
         <div className="glass-card space-y-3 p-5">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Your analytics</h2>
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{tr("results.analyticsTitle")}</h2>
           {insights.insightMessage ? (
             <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
               {insights.insightMessage}
             </p>
           ) : null}
-          {insights.topicStats.length > 0 ? (
+          {(insights.topicStats ?? []).length > 0 ? (
             <ul className="flex flex-wrap gap-2">
-              {insights.topicStats.map((s) => (
+              {(insights.topicStats ?? []).map((s) => (
                 <li
                   key={s.topic}
                   className="rounded-lg border border-zinc-200/80 bg-white/60 px-3 py-1.5 text-xs dark:border-zinc-700 dark:bg-zinc-900/40"
@@ -466,7 +491,7 @@ export default function ExamAnalyticsResultsPage() {
             href="/tests"
             className="inline-block text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
           >
-            View recommended tests →
+            {tr("results.viewRecommended")}
           </Link>
         </div>
       ) : null}
@@ -474,16 +499,16 @@ export default function ExamAnalyticsResultsPage() {
       {/* Question breakdown */}
       <section className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Question review</h2>
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{tr("results.reviewTitle")}</h2>
           <Link href="/tests">
             <Button variant="secondary" className="w-full sm:w-auto">
-              Take another test
+              {tr("results.takeAnother")}
             </Button>
           </Link>
         </div>
 
         <ul className="space-y-5">
-          {data.responses.map((q, idx) => {
+          {responseRows.map((q, idx) => {
             const unattempted = !q.selectedOption;
             const borderClass = q.isCorrect
               ? "border-emerald-400/80 bg-emerald-500/[0.06] dark:border-emerald-700/60 dark:bg-emerald-950/25"
@@ -505,16 +530,16 @@ export default function ExamAnalyticsResultsPage() {
                   {q.isCorrect ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100">
                       <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                      Correct
+                      {tr("results.correct")}
                     </span>
                   ) : unattempted ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs font-semibold text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100">
-                      Skipped
+                      {tr("results.skipped")}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-900 dark:bg-rose-950/60 dark:text-rose-100">
                       <XCircle className="h-3.5 w-3.5" aria-hidden />
-                      Incorrect
+                      {tr("results.incorrect")}
                     </span>
                   )}
                 </div>
@@ -526,11 +551,11 @@ export default function ExamAnalyticsResultsPage() {
                 <dl className="mt-5 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl border border-zinc-200/90 bg-white/70 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950/50">
                     <dt className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-                      Your answer
+                      {tr("results.yourAnswer")}
                     </dt>
                     <dd className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                       {unattempted ? (
-                        <span className="text-zinc-500">— Unattempted</span>
+                        <span className="text-zinc-500">{tr("results.unattemptedLabel")}</span>
                       ) : (
                         <div className="space-y-1">
                           <span>{q.selectedOption}</span>
@@ -545,7 +570,7 @@ export default function ExamAnalyticsResultsPage() {
                   </div>
                   <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/50 px-4 py-3 dark:border-emerald-900/50 dark:bg-emerald-950/30">
                     <dt className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
-                      Correct answer
+                      {tr("results.correctAnswer")}
                     </dt>
                     <dd className="mt-1 text-sm font-semibold text-emerald-950 dark:text-emerald-50">
                       <div className="space-y-1">
@@ -564,7 +589,7 @@ export default function ExamAnalyticsResultsPage() {
                   <details className="group mt-5 rounded-xl border border-indigo-200/70 bg-indigo-50/50 open:bg-indigo-50 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:open:bg-indigo-950/40">
                     <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-indigo-900 marker:content-none dark:text-indigo-200 [&::-webkit-details-marker]:hidden">
                       <span className="flex items-center justify-between gap-2">
-                        Explanation
+                        {tr("results.explanation")}
                         <span className="text-xs font-normal text-indigo-600 group-open:rotate-180 dark:text-indigo-400">
                           ▼
                         </span>
@@ -586,8 +611,8 @@ export default function ExamAnalyticsResultsPage() {
                       onClick={() => void requestAiExplanation(q.questionId, idx)}
                     >
                       {aiExplainLoadingId === q.questionId
-                        ? "Generating AI explanation…"
-                        : "AI explanation"}
+                        ? tr("results.aiExplainLoading")
+                        : tr("results.aiExplain")}
                     </Button>
                   </div>
                 ) : null}

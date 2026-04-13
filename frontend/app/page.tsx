@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { PwaInstallCallout } from "@/components/pwa/PwaInstallCallout";
 
 const siteUrl = getSiteUrl();
 
@@ -79,6 +80,9 @@ const trustStats = [
 export default function MarketingHomePage() {
   return (
     <div className="space-y-24 pb-24">
+      <div className="mx-auto max-w-3xl px-4 pt-4">
+        <PwaInstallCallout audience="guest" />
+      </div>
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-transparent blur-3xl" />

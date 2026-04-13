@@ -8,9 +8,23 @@ function utcTodayString() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * Max OpenAI-backed explain calls per user per UTC day (cache hits do not count).
+ * Set EXPLAIN_DAILY_LIMIT=0 for unlimited (recommended for local dev).
+ */
 export function explainDailyLimit() {
-  const n = Number(process.env.EXPLAIN_DAILY_LIMIT ?? 5);
-  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 5;
+  const raw = process.env.EXPLAIN_DAILY_LIMIT;
+  if (raw === undefined || raw === "") {
+    return 5;
+  }
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) {
+    return 5;
+  }
+  if (n === 0) {
+    return Number.POSITIVE_INFINITY;
+  }
+  return Math.floor(n);
 }
 
 function resolveModelName() {
@@ -33,6 +47,16 @@ function resolveModelName() {
   return process.env.MOCK_EXPLAIN_MODEL || "mock-v1";
 }
 
+function normalizeOptionLetter(v) {
+  if (v == null) return null;
+  const s = String(v).trim().toUpperCase();
+  return /^[ABCD]$/.test(s) ? s : null;
+}
+
+/**
+ * Cache key: question content + which wrong option the student picked (so distractor-specific explain is cached).
+ * Correct or unattempted: no wrongChoice key — matches legacy hashes for “why correct” only.
+ */
 function contentHashFromRow(row) {
   const canonical = {
     p: row.prompt,
@@ -42,11 +66,31 @@ function contentHashFromRow(row) {
     d: row.option_d,
     co: row.correct_option,
   };
+  const sel = normalizeOptionLetter(row.user_selected);
+  if (sel && sel !== normalizeOptionLetter(row.correct_option)) {
+    canonical.wrongChoice = sel;
+  }
   return crypto.createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
 }
 
+function optionTextForLetter(row, letter) {
+  const map = { A: row.option_a, B: row.option_b, C: row.option_c, D: row.option_d };
+  return String(map[letter] ?? "").trim();
+}
+
 function buildBlock(row) {
-  return `STEM:\n${row.prompt}\nOPTS:\nA:${row.option_a}\nB:${row.option_b}\nC:${row.option_c}\nD:${row.option_d}\nCORRECT:${row.correct_option}`;
+  let block = `STEM:\n${row.prompt}\nOPTS:\nA:${row.option_a}\nB:${row.option_b}\nC:${row.option_c}\nD:${row.option_d}\nCORRECT:${row.correct_option}`;
+  const sel = normalizeOptionLetter(row.user_selected);
+  const correct = normalizeOptionLetter(row.correct_option);
+  if (sel && correct && sel !== correct) {
+    const wrongText = optionTextForLetter(row, sel);
+    block += `\n\nSTUDENT_CHOSE: ${sel}\nSTUDENT_CHOSE_TEXT: ${wrongText}`;
+    block += `\n\nINSTRUCTION: The student selected incorrect option ${sel}. You must:
+1) Explain clearly why ${correct} is correct.
+2) Add a separate short paragraph (or clearly labeled section) on why ${sel} tempts students: the misconception, partial truth, or reasoning slip that makes this distractor plausible, and how to avoid this trap next time. Be supportive and exam-focused.
+Keep JSON field "explanation" as the full combined text (both parts), or use two paragraphs within "explanation".`;
+  }
+  return block;
 }
 
 /**
@@ -54,10 +98,12 @@ function buildBlock(row) {
  */
 async function loadQuestionForAttempt(db, userId, attemptId, questionId) {
   const res = await db.query(
-    `SELECT q.id, q.prompt, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option
-     FROM attempts a
-     JOIN questions q ON q.test_id = a.test_id AND q.id = $3
-     WHERE a.id = $1 AND a.user_id = $2 AND a.status = 'submitted'`,
+    `SELECT q.id, q.prompt, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option,
+            ans.selected_option AS user_selected
+     FROM attempts att
+     JOIN questions q ON q.test_id = att.test_id AND q.id = $3
+     LEFT JOIN answers ans ON ans.attempt_id = att.id AND ans.question_id = q.id
+     WHERE att.id = $1 AND att.user_id = $2 AND att.status = 'submitted'`,
     [attemptId, userId, questionId]
   );
   const row = res.rows[0];
@@ -132,6 +178,9 @@ async function insertCache(db, questionId, contentHash, model, payload) {
  */
 async function reserveOpenAiSlot(db, userId) {
   const limit = explainDailyLimit();
+  if (!Number.isFinite(limit)) {
+    return;
+  }
   const usageDate = utcTodayString();
   const client = await db.connect();
   try {
@@ -151,7 +200,10 @@ async function reserveOpenAiSlot(db, userId) {
     const current = lock.rows[0]?.openai_calls ?? 0;
     if (current >= limit) {
       await client.query("ROLLBACK");
-      throw new HttpError(429, "Daily AI explanation limit reached for your account");
+      throw new HttpError(
+        429,
+        "Daily AI explanation limit reached — you have used today’s quota of AI-backed explanations. It resets at midnight UTC (early morning next day in India). Questions you already explained may still show from cache without using a new slot."
+      );
     }
     await client.query(
       `UPDATE user_explanation_usage
@@ -173,6 +225,9 @@ async function reserveOpenAiSlot(db, userId) {
 }
 
 async function releaseOpenAiSlot(db, userId) {
+  if (!Number.isFinite(explainDailyLimit())) {
+    return;
+  }
   const usageDate = utcTodayString();
   await db.query(
     `UPDATE user_explanation_usage
@@ -189,7 +244,8 @@ async function callOpenAiStructured(row, block) {
   }
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const client = new OpenAI({ apiKey: key });
-  const sys = `You are an assistant for law entrance MCQs. Respond with a single JSON object with keys: answer (short string), explanation (string), concept (short string), example (string). No markdown fences.`;
+  const sys = `You are an assistant for law entrance MCQs. Respond with a single JSON object with keys: answer (short string), explanation (string), concept (short string), example (string). No markdown fences.
+If the user block includes STUDENT_CHOSE and INSTRUCTION, follow INSTRUCTION: combine a correct-answer explanation with a distinct section on why the student's wrong option is tempting (misconception / trap) and how to avoid it — all inside "explanation".`;
   const user = `${block}\n\nReturn JSON only.`;
 
 
@@ -200,7 +256,7 @@ async function callOpenAiStructured(row, block) {
       const completion = await client.chat.completions.create({
         model,
         temperature: 0.3,
-        max_tokens: 1200,
+        max_tokens: block.includes("STUDENT_CHOSE:") ? 1600 : 1200,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: sys },
@@ -213,7 +269,8 @@ async function callOpenAiStructured(row, block) {
       const explanation = String(parsed.explanation ?? "").trim();
       const concept = String(parsed.concept ?? "").trim();
       const example = String(parsed.example ?? "").trim();
-      if (answer.length < 5 || explanation.length < 20 || concept.length < 3 || example.length < 10) {
+      const minExpl = block.includes("STUDENT_CHOSE:") ? 80 : 20;
+      if (answer.length < 5 || explanation.length < minExpl || concept.length < 3 || example.length < 10) {
         throw new Error("Model output too short");
       }
       return { answer, explanation, concept, example };
@@ -239,7 +296,7 @@ async function callDeepSeek(row, block) {
   });
   const sys = `You are an assistant for competitive exam MCQs (GK, Law, Reasoning). Respond ONLY with a single JSON object (no markdown) with exactly these keys:
 - answer: which option is correct (e.g. "Option B – Guilty mind")
-- explanation: 2-3 sentence explanation of why it is correct
+- explanation: if STUDENT_CHOSE appears in the block, write (1) why the correct option holds, then (2) a separate paragraph on why the student's wrong option is a common trap (misconception, partial similarity, or slip) and how to avoid it; otherwise 2-3 sentences on why the correct answer is right
 - concept: 2-5 word label for the concept tested (e.g. "Mens Rea")
 - example: one real-world example sentence illustrating the concept`;
   const user = `${block}\n\nReturn JSON only.`;
@@ -251,7 +308,7 @@ async function callDeepSeek(row, block) {
       const completion = await client.chat.completions.create({
         model,
         temperature: 0.3,
-        max_tokens: 1200,
+        max_tokens: block.includes("STUDENT_CHOSE:") ? 1800 : 1200,
         messages: [
           { role: "system", content: sys },
           { role: "user", content: user },
@@ -265,7 +322,8 @@ async function callDeepSeek(row, block) {
       const explanation = String(parsed.explanation ?? "").trim();
       const concept = String(parsed.concept ?? "").trim();
       const example = String(parsed.example ?? "").trim();
-      if (answer.length < 1 || explanation.length < 15 || concept.length < 2) {
+      const minExpl = block.includes("STUDENT_CHOSE:") ? 80 : 15;
+      if (answer.length < 1 || explanation.length < minExpl || concept.length < 2) {
         throw new Error(`DeepSeek output too short — answer:${answer.length} explanation:${explanation.length} concept:${concept.length}`);
       }
       return { answer, explanation, concept, example };
@@ -285,7 +343,7 @@ async function callLocalLlm(row, block) {
   }
   const model = process.env.LOCAL_LLM_MODEL || "llama3.2";
   const timeoutMs = Number(process.env.LOCAL_LLM_TIMEOUT_MS || 120_000);
-  const sys = `Respond with JSON only: {"answer":"","explanation":"","concept":"","example":""} for the MCQ.`;
+  const sys = `Respond with JSON only: {"answer":"","explanation":"","concept":"","example":""} for the MCQ. If the prompt includes STUDENT_CHOSE, explanation must include why the correct option is right and why the student's wrong option is a tempting mistake.`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {

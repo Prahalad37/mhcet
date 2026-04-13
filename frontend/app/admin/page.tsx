@@ -105,7 +105,7 @@ export default function AdminDashboard() {
         <AdminStatCard
           title="Questions"
           value={stats.total_questions}
-          subtitle="In database"
+          subtitle="All mocks (inactive tests still count)"
           icon={Database}
           variant="amber"
         />

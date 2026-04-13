@@ -6,10 +6,15 @@ import { useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
 import { clearToken, getToken } from "@/lib/auth";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useExamUiMode } from "@/hooks/useExamUiMode";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 export function SiteNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const examUi = useExamUiMode();
+  const { t } = useLocale();
   const [authed, setAuthed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -56,6 +61,9 @@ export function SiteNav() {
   const brandIsB2B = Boolean(tenantName);
   const brandLabel = brandIsB2B ? tenantName : "PrepMaster";
 
+  /** Focus exam: distraction-free shell — top nav hidden while attempt is active. */
+  if (examUi === "focus") return null;
+
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-all duration-300 ${
@@ -88,41 +96,58 @@ export function SiteNav() {
           </span>
         </Link>
 
-        {/* Nav — hidden on mobile (BottomNav handles those screens) */}
-        <nav className="hidden md:flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2" aria-label="Primary">
-          {authed ? (
-            <>
-              <Link href="/dashboard" className={navLink("/dashboard")}>Home</Link>
-              <Link href="/tests" className={navLink("/tests")}>Tests</Link>
-              <Link href="/my-mocks" className={navLink("/my-mocks")}>My Mocks</Link>
-              <Link href="/attempts" className={navLink("/attempts")}>History</Link>
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-amber-600 outline-none transition-colors hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                >
-                  Admin
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <LanguageSwitcher compact />
+          {/* Nav — hidden on mobile (BottomNav handles those screens) */}
+          <nav
+            className="hidden min-w-0 flex-wrap items-center gap-x-1 gap-y-2 md:flex"
+            aria-label="Primary"
+          >
+            {authed ? (
+              <>
+                <Link href="/dashboard" className={navLink("/dashboard")}>
+                  {t("nav.home")}
                 </Link>
-              )}
-              <button
-                onClick={logout}
-                className="ml-1 whitespace-nowrap rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm outline-none transition-all hover:border-zinc-300 hover:shadow dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className={navLink("/login")}>Log in</Link>
-              <Link
-                href="/register"
-                className="btn-primary ml-1 !py-1.5 !text-xs"
-              >
-                Sign up free
-              </Link>
-            </>
-          )}
-        </nav>
+                <Link href="/tests" className={navLink("/tests")}>
+                  {t("nav.tests")}
+                </Link>
+                <Link href="/my-mocks" className={navLink("/my-mocks")}>
+                  {t("nav.myMocks")}
+                </Link>
+                <Link href="/attempts" className={navLink("/attempts")}>
+                  {t("nav.history")}
+                </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-amber-600 outline-none transition-colors hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                  >
+                    {t("nav.admin")}
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="ml-1 whitespace-nowrap rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm outline-none transition-all hover:border-zinc-300 hover:shadow dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                >
+                  {t("nav.logout")}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className={navLink("/login")}>
+                  {t("nav.login")}
+                </Link>
+                <Link
+                  href="/register"
+                  className="btn-primary ml-1 !py-1.5 !text-xs"
+                >
+                  {t("nav.signUp")}
+                </Link>
+              </>
+            )}
+          </nav>
+        </div>
       </div>
     </header>
   );

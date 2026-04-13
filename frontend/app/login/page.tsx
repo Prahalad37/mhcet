@@ -8,8 +8,10 @@ import { setToken } from "@/lib/auth";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { PageLoadingState } from "@/components/ui/PageLoadingState";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 function LoginForm() {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -42,7 +44,7 @@ function LoginForm() {
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Login failed");
+        setError(t("login.failed"));
       }
     } finally {
       setLoading(false);
@@ -50,18 +52,18 @@ function LoginForm() {
   }
 
   return (
-    <div className="mx-auto max-w-sm space-y-6">
+    <div className="mx-auto w-full max-w-sm space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Welcome back
+          {t("login.title")}
         </h1>
         <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-          Don&apos;t have an account?{" "}
+          {t("login.subtitle")}{" "}
           <Link
             href="/register"
             className="font-semibold text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
           >
-            Sign up free
+            {t("login.signUpLink")}
           </Link>
         </p>
       </div>
@@ -71,7 +73,7 @@ function LoginForm() {
         className="glass-card space-y-4 p-6"
       >
         <Input
-          label="Email"
+          label={t("login.email")}
           type="email"
           autoComplete="email"
           required
@@ -79,7 +81,7 @@ function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <Input
-          label="Password"
+          label={t("login.password")}
           type="password"
           autoComplete="current-password"
           required
@@ -89,18 +91,23 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full !py-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {loading ? "Signing in…" : "Continue →"}
+          {loading ? t("login.loading") : t("login.continue")}
         </button>
       </form>
     </div>
   );
 }
 
+function LoginSuspenseFallback() {
+  const { t } = useLocale();
+  return <PageLoadingState label={t("common.loading")} />;
+}
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={<PageLoadingState label="Loading" />}>
+    <Suspense fallback={<LoginSuspenseFallback />}>
       <LoginForm />
     </Suspense>
   );

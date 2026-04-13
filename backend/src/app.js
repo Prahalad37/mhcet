@@ -20,8 +20,10 @@ import { httpLogMiddleware } from "./middleware/httpLog.js";
 import { requestTimeoutMiddleware } from "./middleware/requestTimeout.js";
 import { apiGlobalLimiter } from "./middleware/apiGlobalLimiter.js";
 import { logWarn } from "./utils/logger.js";
+import { resolveRedisUrl } from "./jobs/connection.js";
 
 dotenv.config();
+resolveRedisUrl();
 
 // Warm up the Redis/BullMQ connection at startup (if REDIS_URL is set) so the
 // first explain request does not incur the TLS handshake delay and hit the timeout.

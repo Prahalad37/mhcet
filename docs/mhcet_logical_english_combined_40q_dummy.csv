@@ -1,0 +1,42 @@
+question,optionA,optionB,optionC,optionD,correct,subject,hint,explanation
+All pens are tools. This is a pen. Therefore it is?,A toy,A tool,A liquid,A plant,B,Logical Reasoning,Syllogism,If all A are B and x is A then x is B.
+If no birds are mammals and some animals are birds then some animals are not mammals?,Always true,Always false,Cannot tell,Only if all animals are birds,A,Logical Reasoning,Sets,Birds and mammals are disjoint so bird-animals are non-mammals.
+Complete the series 2 5 10 17 26 ?,35,37,33,39,B,Logical Reasoning,Differences,Add 3 then 5 then 7 then 9 then 11 → 37.
+In a line R stands before S and S before T. Who is at the back?,R,S,T,Cannot say,C,Logical Reasoning,Order,T is last in the chain.
+If CAT is coded as DBU with each letter plus one then DOG becomes?,EPH,FQI,ENH,GPH,A,Logical Reasoning,Cipher,Apply the same plus-one shift to each letter.
+Monday is to week as second is to?,Minute,Hour,Day,Month,B,Logical Reasoning,Analogy,Second is a subdivision of an hour.
+Which is the odd one out?,Square,Circle,Triangle,Cube,D,Logical Reasoning,2D vs 3D,Cube is three-dimensional; the others are plane figures.
+Volume rises when you turn a knob right. To lower volume you turn?,Left,Right,Twice,Off,A,Logical Reasoning,Opposite,Use the opposite direction of the stated increase.
+A claims I always lie today. Without extra rules this is often treated as?,Clearly true,Clearly false,Under-specified,A joke,C,Logical Reasoning,Liar paradox,Need explicit truth-value rules to resolve self-reference.
+Given C greater than A and A greater than B and D less than B. Who is largest?,A,B,C,D,C,Logical Reasoning,Inequalities,Chain gives C greater than A greater than B; D is below B so C is the largest.
+Odd one out in 3 9 27 36,3,9,27,36,D,Logical Reasoning,Powers,Only 36 is not a power of three.
+A woman points at a boy and says His mother is my mother’s only daughter. The boy is her?,Son,Nephew,Brother,Cousin,A,Logical Reasoning,Family,Only daughter is herself so the boy is her son.
+Five houses in a row; green is at one end; red is beside blue but not beside green. Often then?,Red touches green,Blue is in the middle,Green borders red,Red lies between green and blue,D,Logical Reasoning,Arrangement,Common valid layout places red between green and blue.
+What comes next Z Y X W V ?,T,U,S,R,B,Logical Reasoning,Letters,Reverse alphabetical order.
+If P implies Q is true and Q is false then P must be?,True,False,Unknown,Both,B,Logical Reasoning,Logic,Modus tollens yields not-P.
+Six teams play each other once. Total matches?,12,15,20,30,B,Logical Reasoning,Choose 2,Six choose two equals fifteen.
+At 3:15 the smaller angle between clock hands is about?,0 degrees,7.5 degrees,22.5 degrees,90 degrees,B,Logical Reasoning,Clock,Minute at 3; hour has moved one quarter toward 4.
+Some teachers are singers. All singers are artists. Does that prove some teachers are artists?,Yes,No,Only if all teachers sing,Cannot tell,A,Logical Reasoning,Syllogism,Some teachers ⊆ singers ⊆ artists gives some teachers are artists.
+If all X are Y and no Y are Z then no X are Z?,True,False,Sometimes,Depends on size,A,Logical Reasoning,Transitivity,Subset inherits the exclusion from the superset.
+In code READ becomes SFBF by +1 per letter. WRITE becomes?,XSJUF,XSJUG,YRJUF,ZRJUF,A,Logical Reasoning,Pattern,Apply the same +1 shift to each letter.
+
+Choose the word most nearly opposite to RELUCTANT.,Willing,Quick,Silent,Polite,A,English,Antonyms,Reluctant means unwilling.
+Neither of the two options ___ acceptable.,is,are,be,were,A,English,Agreement,Neither takes a singular verb in formal English.
+Choose the correctly spelled word.,Occurence,Occurrence,Ocurrence,Occurrance,B,English,Spelling,Double r before -ence.
+Pick the best synonym for shock in The news was a shock.,surprise,order,comfort,routine,A,English,Context,Shock here means sudden surprise.
+Which sentence is correct?,Its a nice day.,It's a nice day.,Its' a nice day.,It is nice day.,B,English,Apostrophe,It's expands to it is; its is possessive.
+Put in natural order: rarely / she / arrives / late.,She rarely arrives late.,Rarely she arrives late.,She arrives rarely late.,Late she rarely arrives.,A,English,Word order,Standard adverb placement after subject.
+To bite off more than one can chew means?,Eat fast,Take on too much,Finish early,Share food,B,English,Idiom,It means overcommitting.
+The judge’s comments were ___ and fair.,biased,impartial,loud,late,B,English,Tone,Impartial matches fair.
+Find the error: One of the students have forgotten.,No error,have to has,students to student,forgotten to forgot,B,English,Subject-verb,One of the students has…
+A synonym of BRIEF is?,lengthy,concise,angry,vague,B,English,Meaning,Brief and concise both mean short.
+Make passive: The committee approved the plan.,The plan was approved by the committee.,The plan approved the committee.,The committee was approved.,The plan is approving.,A,English,Voice,Use be + past participle with optional by-agent.
+Hardly ___ she arrived when it began to rain.,had,did,has,were,A,English,Inversion,Hardly had she arrived is standard with past perfect.
+A formal substitute for a lot of is?,lotsa,much or many,ton of,hella,B,English,Register,Prefer much/many in formal prose.
+OMIT means to?,add,leave out,underline,repeat,B,English,Vocabulary,To omit is to exclude.
+Use the correct article: She is ___ European citizen.,a,an,the,no article,A,English,Articles,European starts with a consonant sound /j/.
+Despite the rain the match went on means?,Rain caused stop,Rain but match continued,Rain before match,No rain,B,English,Concession,Despite introduces contrast; play continued.
+Choose the correct word: The data ___ inconclusive.,is,are,be,were,B,English,Data plural,Many style guides treat data as plural so are fits.
+The opposite of GENEROUS is?,kind,stingy,brave,calm,B,English,Antonyms,Stingy contrasts with generous.
+Which is a complete sentence?,Running fast.,She runs.,Because rain.,Although.,B,English,Clause,She runs has subject and finite verb.
+Fill in: If I ___ you I would wait.,am,was,were,be,C,English,Subjunctive,Were for unreal if with I in formal English.

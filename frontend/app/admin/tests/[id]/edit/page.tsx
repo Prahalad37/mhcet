@@ -31,6 +31,8 @@ export default function EditTestPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    generalInstructions: "",
+    generalInstructionsHi: "",
     durationSeconds: 7200,
     topic: "",
     isActive: true,
@@ -59,6 +61,8 @@ export default function EditTestPage() {
       setFormData({
         title: t.title,
         description: t.description ?? "",
+        generalInstructions: t.generalInstructions ?? "",
+        generalInstructionsHi: t.generalInstructionsHi ?? "",
         durationSeconds: t.durationSeconds,
         topic: t.topic,
         isActive: t.isActive,
@@ -91,6 +95,8 @@ export default function EditTestPage() {
         topic: formData.topic,
         isActive: formData.isActive,
         tenantId: tenantPayload,
+        generalInstructions: formData.generalInstructions.trim() || null,
+        generalInstructionsHi: formData.generalInstructionsHi.trim() || null,
       });
       toastSuccessSafe("Test updated");
       router.push("/admin/tests");
@@ -176,6 +182,46 @@ export default function EditTestPage() {
                 }
                 rows={3}
                 className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                General instructions (English, Markdown)
+              </label>
+              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                Pre-exam screen before the timer. Empty = default template. Markdown supported.
+              </p>
+              <textarea
+                value={formData.generalInstructions}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    generalInstructions: e.target.value,
+                  }))
+                }
+                rows={8}
+                className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 font-mono text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                General instructions (Hindi, optional)
+              </label>
+              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                Hindi UI; falls back to English block if empty.
+              </p>
+              <textarea
+                value={formData.generalInstructionsHi}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    generalInstructionsHi: e.target.value,
+                  }))
+                }
+                rows={8}
+                className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 font-mono text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </div>
 

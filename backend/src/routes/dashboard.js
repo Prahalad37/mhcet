@@ -50,7 +50,7 @@ dashboardRouter.get("/", async (req, res, next) => {
     // ── 2. Recent 3 submitted attempts ──────────────────────────────
     const { rows: recentRows } = await pool.query(
       `SELECT att.id, att.score, att.total_questions, att.submitted_at,
-              t.title, t.topic, t.id AS test_id
+              t.title, t.topic, t.id AS test_id, t.is_active AS test_is_active
        FROM attempts att
        JOIN tests t ON t.id = att.test_id
        WHERE att.user_id = $1 AND att.status = 'submitted'
@@ -64,6 +64,7 @@ dashboardRouter.get("/", async (req, res, next) => {
       testId: r.test_id,
       title: r.title,
       topic: r.topic,
+      testIsActive: r.test_is_active === true,
       score: r.score ?? 0,
       total: r.total_questions ?? 0,
       accuracy:

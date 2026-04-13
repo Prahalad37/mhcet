@@ -19,7 +19,8 @@ function messageForStatus(status: number, message: string): string {
   }
   if (status === 429) {
     return (
-      message || "Too many requests. Wait a moment and then try again."
+      message ||
+      "Too many requests. Wait a moment and then try again."
     );
   }
   if (status === 502) {
@@ -37,6 +38,13 @@ function messageForStatus(status: number, message: string): string {
     return "A server error occurred. Please try again, and if the problem persists, contact support.";
   }
   return message || "Something went wrong.";
+}
+
+/** Matches worker/API copy when the per-day AI explain quota is exhausted. */
+export function isAiExplainDailyLimitMessage(message: string): boolean {
+  return /daily ai explanation limit|today.?s quota of ai-backed/i.test(
+    message
+  );
 }
 
 export function getUserErrorMessage(

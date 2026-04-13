@@ -12,6 +12,8 @@ export interface RecentAttempt {
   testId: string;
   title: string;
   topic: string;
+  /** False when admin deactivated the mock; attempt history still shows. */
+  testIsActive?: boolean;
   score: number;
   total: number;
   accuracy: number | null;

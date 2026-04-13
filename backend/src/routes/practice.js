@@ -3,6 +3,11 @@ import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
+import { getContentLang } from "../utils/contentLocale.js";
+import {
+  mapQuestionRowToPublic,
+  QUESTION_ROW_SELECT,
+} from "../utils/questionLocale.js";
 
 export const practiceRouter = Router();
 practiceRouter.use(authMiddleware);
@@ -46,7 +51,7 @@ practiceRouter.post("/start", async (req, res, next) => {
     }
 
     const { rows: questions } = await pool.query(
-      `SELECT id, prompt, option_a, option_b, option_c, option_d, order_index
+      `SELECT ${QUESTION_ROW_SELECT}
        FROM questions
        WHERE subject = $1
        ORDER BY RANDOM()
@@ -60,21 +65,14 @@ practiceRouter.post("/start", async (req, res, next) => {
        RETURNING id, started_at`,
       [userId, subject, questions.length]
     );
+    const lang = getContentLang(req);
 
     res.status(201).json({
       sessionId: session.rows[0].id,
       subject,
       startedAt: session.rows[0].started_at,
       totalQuestions: questions.length,
-      questions: questions.map((r) => ({
-        id: r.id,
-        prompt: r.prompt,
-        optionA: r.option_a,
-        optionB: r.option_b,
-        optionC: r.option_c,
-        optionD: r.option_d,
-        orderIndex: r.order_index,
-      })),
+      questions: questions.map((r) => mapQuestionRowToPublic(r, lang)),
     });
   } catch (e) {
     if (e instanceof z.ZodError) {
@@ -104,7 +102,8 @@ practiceRouter.post("/:sessionId/check", async (req, res, next) => {
     }
 
     const q = await pool.query(
-      `SELECT correct_option, hint, official_explanation FROM questions WHERE id = $1`,
+      `SELECT correct_option, hint, hint_hi, official_explanation, official_explanation_hi
+       FROM questions WHERE id = $1`,
       [questionId]
     );
     if (q.rowCount === 0) {
@@ -113,6 +112,11 @@ practiceRouter.post("/:sessionId/check", async (req, res, next) => {
 
     const row = q.rows[0];
     const isCorrect = selectedOption === row.correct_option;
+    const lang = getContentLang(req);
+    const pick = (en, hi) =>
+      lang === "hi" && hi != null && String(hi).trim() !== ""
+        ? String(hi).trim()
+        : en;
 
     const upsertAnswer = await pool.query(
       `INSERT INTO practice_answers (session_id, question_id, selected_option, is_correct)
@@ -133,8 +137,8 @@ practiceRouter.post("/:sessionId/check", async (req, res, next) => {
     res.json({
       correct: isCorrect,
       correctOption: row.correct_option,
-      hint: row.hint,
-      officialExplanation: row.official_explanation,
+      hint: pick(row.hint, row.hint_hi),
+      officialExplanation: pick(row.official_explanation, row.official_explanation_hi),
     });
   } catch (e) {
     if (e instanceof z.ZodError) {

@@ -12,7 +12,6 @@ import type {
   AuditLogsResponse,
   ImportResult,
 } from "./types";
-import { pollJob } from "./jobPoll";
 
 const API_BASE = getApiBaseUrl();
 
@@ -44,6 +43,8 @@ export async function createTest(data: {
   isActive?: boolean;
   /** Omit = global; `null` or `""` clears / platform catalog. */
   tenantId?: string | null | "";
+  generalInstructions?: string | null;
+  generalInstructionsHi?: string | null;
 }): Promise<AdminTest> {
   return api<AdminTest>("/api/admin/tests", {
     method: "POST",
@@ -59,6 +60,8 @@ export async function updateTest(id: string, data: Partial<{
   topic: string;
   isActive: boolean;
   tenantId: string | null | "";
+  generalInstructions: string | null;
+  generalInstructionsHi: string | null;
 }>): Promise<AdminTest> {
   return api<AdminTest>(`/api/admin/tests/${id}`, {
     method: "PUT",
@@ -182,6 +185,15 @@ export async function updateUserTenant(
   });
 }
 
+export async function deleteAdminUser(
+  id: string
+): Promise<{ message: string; id: string }> {
+  return api<{ message: string; id: string }>(`/api/admin/users/${id}`, {
+    method: "DELETE",
+    ...noErrorToast,
+  });
+}
+
 // ============================================================================
 // TENANTS (B2B institutes)
 // ============================================================================
@@ -247,10 +259,6 @@ export async function importQuestionsCSV(testId: string, file: File): Promise<Im
   
   const data = await response.json();
 
-  if (response.status === 202 && data && typeof data.jobId === "string") {
-    return pollJob<ImportResult>(data.jobId);
-  }
-
   if (!response.ok) {
     const errMsg =
       typeof data?.error === "string" ? data.error : "Import failed";
@@ -273,9 +281,6 @@ export async function importQuestionsText(testId: string, csvText: string): Prom
     body: JSON.stringify({ csvText }),
   });
   const data = await response.json();
-  if (response.status === 202 && data && typeof data.jobId === "string") {
-    return pollJob<ImportResult>(data.jobId);
-  }
   if (!response.ok) {
     const errMsg =
       typeof data?.error === "string" ? data.error : "Import failed";

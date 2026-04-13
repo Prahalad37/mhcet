@@ -1,9 +1,18 @@
 import { HttpError } from "./httpError.js";
 
-/** Max mock attempts per UTC day for `plan = free`. Paid users are unlimited. */
+const DEFAULT_FREE_TESTS_PER_DAY = 2;
+
+/**
+ * Max mock attempts per UTC day for `plan = free`. Paid users are unlimited.
+ * If `FREE_TESTS_PER_DAY` is unset or invalid, defaults to 2 (production-like cap).
+ */
 export function freeTestsPerDay() {
-  const n = Number(process.env.FREE_TESTS_PER_DAY);
-  return Number.isFinite(n) && n >= 0 ? n : 999999;
+  const raw = process.env.FREE_TESTS_PER_DAY;
+  if (raw === undefined || raw === "") {
+    return DEFAULT_FREE_TESTS_PER_DAY;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : DEFAULT_FREE_TESTS_PER_DAY;
 }
 
 /**

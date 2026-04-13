@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,10 +9,23 @@ import { getToken } from "@/lib/auth";
 import { redirectToLogin } from "@/lib/authRedirect";
 import { useClientMounted } from "@/lib/useClientMounted";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import {
-  ScoreHistoryChart,
-  ScoreHistoryEmpty,
-} from "@/components/dashboard/ScoreHistoryChart";
+import { ScoreHistoryEmpty } from "@/components/dashboard/ScoreHistoryEmpty";
+import { PwaInstallCallout } from "@/components/pwa/PwaInstallCallout";
+
+const ScoreHistoryChart = dynamic(
+  () =>
+    import("@/components/dashboard/ScoreHistoryChart").then((m) => m.ScoreHistoryChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="glass-card h-[min(280px,42vh)] min-h-[200px] animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800"
+        aria-busy
+        aria-label="Loading score chart"
+      />
+    ),
+  }
+);
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
 
@@ -131,6 +145,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 pb-8">
+      <PwaInstallCallout audience="authed" />
       {/* ── Greeting & resume banner ─────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 max-w-full">
@@ -249,6 +264,12 @@ export default function DashboardPage() {
                     </p>
                     <p className="text-xs text-zinc-400">
                       {a.score}/{a.total} correct · {relativeTime(a.submittedAt)}
+                      {a.testIsActive === false ? (
+                        <span className="text-zinc-500 dark:text-zinc-500">
+                          {" "}
+                          · Removed from catalog
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                   <span className="text-zinc-300 dark:text-zinc-600">›</span>
@@ -309,6 +330,17 @@ export default function DashboardPage() {
       )}
 
       {/* ── Quick links ──────────────────────────────────────── */}
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 pt-2">
+        Build speed with{" "}
+        <Link href="/practice" className="font-medium text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400">
+          topic practice
+        </Link>
+        , then lock in exam stamina with a full{" "}
+        <Link href="/tests" className="font-medium text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400">
+          timed mock
+        </Link>
+        .
+      </p>
       <div className="flex flex-wrap gap-2 pt-2">
         <Link
           href="/tests"

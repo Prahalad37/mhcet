@@ -18,6 +18,14 @@ const HEADER_ALIASES = new Map([
   ['hint', 'hint'],
   ['explanation', 'explanation'],
   ['officialexplanation', 'explanation'],
+  ['questionhi', 'questionHi'],
+  ['prompthi', 'questionHi'],
+  ['optionahi', 'optionAHi'],
+  ['optionbhi', 'optionBHi'],
+  ['optionchi', 'optionCHi'],
+  ['optiondhi', 'optionDHi'],
+  ['hinthi', 'hintHi'],
+  ['explanationhi', 'explanationHi'],
 ]);
 
 function normalizeHeaderKey(raw) {
@@ -35,6 +43,13 @@ function normalizeHeaderKey(raw) {
     'subject',
     'hint',
     'explanation',
+    'questionHi',
+    'optionAHi',
+    'optionBHi',
+    'optionCHi',
+    'optionDHi',
+    'hintHi',
+    'explanationHi',
   ];
   if (canonical.includes(stripped)) return stripped;
   return stripped;
@@ -170,6 +185,7 @@ export function validateQuestionCSV(rows) {
     if (rowErrors.length > 0) {
       errors.push(`Row ${rowNum}: ${rowErrors.join(', ')}`);
     } else {
+      const optHi = (k) => (row[k] != null && String(row[k]).trim() !== "" ? String(row[k]).trim() : null);
       // Normalize the row data
       validRows.push({
         prompt: row.question.trim(),
@@ -181,6 +197,13 @@ export function validateQuestionCSV(rows) {
         subject: subject,
         hint: row.hint?.trim() || null,
         officialExplanation: row.explanation?.trim() || null,
+        promptHi: optHi("questionHi"),
+        optionAHi: optHi("optionAHi"),
+        optionBHi: optHi("optionBHi"),
+        optionCHi: optHi("optionCHi"),
+        optionDHi: optHi("optionDHi"),
+        hintHi: optHi("hintHi"),
+        officialExplanationHi: optHi("explanationHi"),
       });
     }
   });
